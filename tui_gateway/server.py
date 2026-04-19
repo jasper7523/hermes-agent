@@ -906,12 +906,20 @@ def _reset_session_agent(sid: str, session: dict) -> dict:
 
 def _make_agent(sid: str, key: str, session_id: str | None = None):
     from run_agent import AIAgent
+    from hermes_cli.runtime_provider import resolve_runtime_provider
     cfg = _load_cfg()
     system_prompt = cfg.get("agent", {}).get("system_prompt", "") or ""
     if not system_prompt:
         system_prompt = _resolve_personality_prompt(cfg)
+    
+    runtime = resolve_runtime_provider(requested=None)
+    m_cfg = cfg.get("model", {})
+    
     return AIAgent(
         model=_resolve_model(),
+        provider=str(runtime.get("provider", "") or m_cfg.get("provider", "") or ""),
+        base_url=str(runtime.get("base_url", "") or m_cfg.get("base_url", "") or ""),
+        api_key=str(runtime.get("api_key", "") or m_cfg.get("api_key", "") or m_cfg.get("api", "") or ""),
         quiet_mode=True,
         verbose_logging=_load_tool_progress_mode() == "verbose",
         reasoning_config=_load_reasoning_config(),
@@ -1606,8 +1614,19 @@ def _(rid, params: dict) -> dict:
         session_tokens = _set_session_context(session["session_key"])
         try:
             from run_agent import AIAgent
-            result = AIAgent(model=_resolve_model(), quiet_mode=True, platform="tui",
-                             max_iterations=8, enabled_toolsets=[]).run_conversation(text, conversation_history=snapshot)
+            from hermes_cli.runtime_provider import resolve_runtime_provider
+            runtime = resolve_runtime_provider(requested=None)
+            m_cfg = _load_cfg().get("model", {})
+            result = AIAgent(
+                model=_resolve_model(), 
+                provider=str(runtime.get("provider", "") or m_cfg.get("provider", "") or ""),
+                base_url=str(runtime.get("base_url", "") or m_cfg.get("base_url", "") or ""),
+                api_key=str(runtime.get("api_key", "") or m_cfg.get("api_key", "") or m_cfg.get("api", "") or ""),
+                quiet_mode=True, 
+                platform="tui",
+                max_iterations=8, 
+                enabled_toolsets=[]
+            ).run_conversation(text, conversation_history=snapshot)
             _emit("btw.complete", sid, {"text": result.get("final_response", str(result)) if isinstance(result, dict) else str(result)})
         except Exception as e:
             _emit("btw.complete", sid, {"text": f"error: {e}"})

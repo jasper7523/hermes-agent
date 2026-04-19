@@ -2,9 +2,15 @@ import json
 import signal
 import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 from tui_gateway.server import handle_request, resolve_skin, write_json
 
-signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+if hasattr(signal, "SIGPIPE"):
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
