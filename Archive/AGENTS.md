@@ -162,23 +162,30 @@ All slash commands are defined in a central `COMMAND_REGISTRY` list of `CommandD
 ### Adding a Slash Command
 
 1. Add a `CommandDef` entry to `COMMAND_REGISTRY` in `hermes_cli/commands.py`:
+
 ```python
 CommandDef("mycommand", "Description of what it does", "Session",
            aliases=("mc",), args_hint="[arg]"),
 ```
-2. Add handler in `HermesCLI.process_command()` in `cli.py`:
+
+1. Add handler in `HermesCLI.process_command()` in `cli.py`:
+
 ```python
 elif canonical == "mycommand":
     self._handle_mycommand(cmd_original)
 ```
-3. If the command is available in the gateway, add a handler in `gateway/run.py`:
+
+1. If the command is available in the gateway, add a handler in `gateway/run.py`:
+
 ```python
 if canonical == "mycommand":
     return await self._handle_mycommand(event)
 ```
-4. For persistent settings, use `save_config_value()` in `cli.py`
+
+1. For persistent settings, use `save_config_value()` in `cli.py`
 
 **CommandDef fields:**
+
 - `name` — canonical name without slash (e.g. `"background"`)
 - `description` — human-readable description
 - `category` — one of `"Session"`, `"Configuration"`, `"Tools & Skills"`, `"Info"`, `"Exit"`
@@ -250,6 +257,7 @@ npm test          # vitest
 Requires changes in **2 files**:
 
 **1. Create `tools/your_tool.py`:**
+
 ```python
 import json, os
 from tools.registry import registry
@@ -286,12 +294,15 @@ The registry handles schema collection, dispatch, availability checking, and err
 
 ## Adding Configuration
 
-### config.yaml options:
+### config.yaml options
+
 1. Add to `DEFAULT_CONFIG` in `hermes_cli/config.py`
 2. Bump `_config_version` (currently 5) to trigger migration for existing users
 
-### .env variables:
+### .env variables
+
 1. Add to `OPTIONAL_ENV_VARS` in `hermes_cli/config.py` with metadata:
+
 ```python
 "NEW_API_KEY": {
     "description": "What it's for",
@@ -302,7 +313,7 @@ The registry handles schema collection, dispatch, availability checking, and err
 },
 ```
 
-### Config loaders (two separate systems):
+### Config loaders (two separate systems)
 
 | Loader | Used by | Location |
 |--------|---------|----------|
@@ -402,9 +413,11 @@ Activate with `/skin cyberpunk` or `display.skin: cyberpunk` in config.yaml.
 ---
 
 ## Important Policies
+
 ### Prompt Caching Must Not Break
 
 Hermes-Agent ensures caching remains valid throughout a conversation. **Do NOT implement changes that would:**
+
 - Alter past context mid-conversation
 - Change toolsets mid-conversation
 - Reload memories or rebuild system prompts mid-conversation
@@ -412,6 +425,7 @@ Hermes-Agent ensures caching remains valid throughout a conversation. **Do NOT i
 Cache-breaking forces dramatically higher costs. The ONLY time we alter context is during context compression.
 
 ### Working Directory Behavior
+
 - **CLI**: Uses current directory (`.` → `os.getcwd()`)
 - **Messaging**: Uses `MESSAGING_CWD` env var (default: home directory)
 
@@ -442,6 +456,7 @@ automatically scope to the active profile.
 
 1. **Use `get_hermes_home()` for all HERMES_HOME paths.** Import from `hermes_constants`.
    NEVER hardcode `~/.hermes` or `Path.home() / ".hermes"` in code that reads/writes state.
+
    ```python
    # GOOD
    from hermes_constants import get_hermes_home
@@ -453,6 +468,7 @@ automatically scope to the active profile.
 
 2. **Use `display_hermes_home()` for user-facing messages.** Import from `hermes_constants`.
    This returns `~/.hermes` for default or `~/.hermes/profiles/<name>` for profiles.
+
    ```python
    # GOOD
    from hermes_constants import display_hermes_home
@@ -468,6 +484,7 @@ automatically scope to the active profile.
 
 4. **Tests that mock `Path.home()` must also set `HERMES_HOME`** — since code now uses
    `get_hermes_home()` (reads env var), not `Path.home() / ".hermes"`:
+
    ```python
    with patch.object(Path, "home", return_value=tmp_path), \
         patch.dict(os.environ, {"HERMES_HOME": str(tmp_path / ".hermes")}):
@@ -488,28 +505,35 @@ automatically scope to the active profile.
 ## Known Pitfalls
 
 ### DO NOT hardcode `~/.hermes` paths
+
 Use `get_hermes_home()` from `hermes_constants` for code paths. Use `display_hermes_home()`
 for user-facing print/log messages. Hardcoding `~/.hermes` breaks profiles — each profile
 has its own `HERMES_HOME` directory. This was the source of 5 bugs fixed in PR #3575.
 
 ### DO NOT use `simple_term_menu` for interactive menus
+
 Rendering bugs in tmux/iTerm2 — ghosting on scroll. Use `curses` (stdlib) instead. See `hermes_cli/tools_config.py` for the pattern.
 
 ### DO NOT use `\033[K` (ANSI erase-to-EOL) in spinner/display code
+
 Leaks as literal `?[K` text under `prompt_toolkit`'s `patch_stdout`. Use space-padding: `f"\r{line}{' ' * pad}"`.
 
 ### `_last_resolved_tool_names` is a process-global in `model_tools.py`
+
 `_run_single_child()` in `delegate_tool.py` saves and restores this global around subagent execution. If you add new code that reads this global, be aware it may be temporarily stale during child agent runs.
 
 ### DO NOT hardcode cross-tool references in schema descriptions
+
 Tool schema descriptions must not mention tools from other toolsets by name (e.g., `browser_navigate` saying "prefer web_search"). Those tools may be unavailable (missing API keys, disabled toolset), causing the model to hallucinate calls to non-existent tools. If a cross-reference is needed, add it dynamically in `get_tool_definitions()` in `model_tools.py` — see the `browser_navigate` / `execute_code` post-processing blocks for the pattern.
 
 ### Tests must not write to `~/.hermes/`
+
 The `_isolate_hermes_home` autouse fixture in `tests/conftest.py` redirects `HERMES_HOME` to a temp dir. Never hardcode `~/.hermes/` paths in tests.
 
 **Profile tests**: When testing profile features, also mock `Path.home()` so that
 `_get_profiles_root()` and `_get_default_hermes_home()` resolve within the temp dir.
 Use the pattern from `tests/hermes_cli/test_profiles.py`:
+
 ```python
 @pytest.fixture
 def profile_env(tmp_path, monkeypatch):
