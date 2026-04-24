@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  hermes-webui:
+    image: ekkoye8888/hermes-web-ui:latest
+    container_name: hermes_webui_n7
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6060:8648"  # 將 BFF 的 8648 綁定到本機 6060
+    environment:
+      - TZ=Asia/Taipei
+      # - AUTH_DISABLED=1  # 預設開啟 Auth，若需關閉可取消註解
+    volumes:
+      - ~/.hermes:/root/.hermes  # 映射 Hermes Agent 狀態目錄
+    network_mode: "host"         # 由於 Gateway 在宿主機運行，MVP 先採用 host 模式以便直接訪問 localhost:8642
