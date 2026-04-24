@@ -28,19 +28,19 @@ graph TD
         N8[N8: Academic_Oracle_Agent<br/>(學術論文專家 / Consensus MCP)]
     end
     
-    N1 -->|法理檢索與分析| N2
+    N1 -->|法理探勘與分析| N2
     N1 -->|基建部署與修復| N3
     N1 -->|行銷文案生成| N4
     N1 -->|專書寫作與修訂| N5
-    N1 -->|學術探勘與論文| N8
+    N1 -->|學術探勘與起草| N8
     
     %% 背景守護連線
     N1 -.->|調度歷史寫入| N6
     N1 -.->|錯誤回報與容錯| N7
     
-    %% 橫向協同
-    N5 -.->|學術管線底層呼叫| N8
-    N2 -.->|提供法源依據| N5
+    %% 橫向情報協同
+    N8 -.->|向全域法務中心請求實證數據| N2
+    N5 -.->|請求專書關聯法源依據| N2
 ```
 
 ---
@@ -51,14 +51,14 @@ graph TD
 *   **N1 (Hub Coordinator)**：最高戰略中樞。負責與指揮官對接，理解意圖後將任務動態路由給對應的子代理人。**嚴守 Zero-Trust 隔離**，無法直接窺探子代理人的沙箱。
 
 ### 2. 專業作戰節點 (已實體化或建軍中)
+*   **N8 (Academic_Oracle_Agent)**：【建軍完成】
+    *   **職責**：SSCI 學術論文撰寫、Deep Research 多輪自主推論與動態視覺化。
+    *   **裝備**：四階段 GStack 攔截腳本、本地 12-agent `academic-paper` 寫作管線。(註：原始情資撈取委由 N2 處理，過渡期暫以本機 Consensus MCP 替代)。
 *   **N5 (Book_Writer_Agent)**：【建軍完成】
     *   **職責**：《企業法遵與危機管理實務指引》專書撰寫。
     *   **裝備**：`academic-book-writer`、Consensus MCP、`patch_draft.py` (RCA-0416 防護)。
-*   **N8 (Academic_Oracle_Agent)**：【建軍中】
-    *   **職責**：SSCI 學術論文撰寫、海量文獻探勘。
-    *   **裝備**：12-agent `academic-paper` 管線、Consensus MCP。
 *   **N2 (Legal_Research_Agent)**：【待命建軍】
-    *   **職責**：法務研究與判例爬梳。下轄 `Analyzer` (分析)、`Comparator` (比對)、`Grader` (評分) 三支微型部隊。
+    *   **職責**：全域法務與學術情報探勘。內建 9 大重型資料庫 (含 Westlaw, LexisNexis, Lawbank, Consensus 等)。下轄 `Analyzer` (路由解析)、`Comparator` (跨法域比對)、`Grader` (證據力評級) ACG 三階段情報管線。
 *   **N3 (Software_Engineer_Agent)**：【待命建軍】
     *   **職責**：底層架構除錯、GSD 管線開發。
 *   **N4 (Creative_Writer_Agent)**：【待命建軍】
