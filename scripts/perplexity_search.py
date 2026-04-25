@@ -66,6 +66,22 @@ class PerplexityCDP:
     async def search(self, query: str):
         await self.connect()
         
+        # [N5 Fix Upstreamed]: Force 'New Thread' via Ctrl+I to reset DOM state 
+        # Prevents race conditions where old '.prose' elements satisfy the polling prematurely
+        await self.send_command("Input.dispatchKeyEvent", {
+            "type": "keyDown",
+            "modifiers": 2, # Ctrl
+            "windowsVirtualKeyCode": 73, # I
+            "text": "i"
+        })
+        await self.send_command("Input.dispatchKeyEvent", {
+            "type": "keyUp",
+            "modifiers": 2,
+            "windowsVirtualKeyCode": 73
+        })
+        # Wait for the new thread UI to initialize
+        await asyncio.sleep(1.5)
+        
         focus_js = "document.getElementById('ask-input').focus();"
         await self.execute_js(focus_js)
         
