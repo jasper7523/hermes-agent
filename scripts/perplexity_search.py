@@ -3,6 +3,7 @@ import json
 import asyncio
 import websockets
 import time
+import pyperclip
 
 class PerplexityCDP:
     def __init__(self, port=9222):
@@ -26,7 +27,6 @@ class PerplexityCDP:
             raise Exception("Perplexity App main page not found on CDP port.")
             
         self.ws = await websockets.connect(self.ws_url, ping_interval=None)
-        # Start a background task to receive messages
         asyncio.create_task(self._receive_loop())
 
     async def _receive_loop(self):
@@ -66,17 +66,14 @@ class PerplexityCDP:
     async def search(self, query: str):
         await self.connect()
         
-        # 1. Focus the input box
         focus_js = "document.getElementById('ask-input').focus();"
         await self.execute_js(focus_js)
         
-        # 2. Insert text directly via CDP (Bypasses React event issues)
         await self.send_command("Input.insertText", {"text": query})
         
-        # 3. Press Enter
         await self.send_command("Input.dispatchKeyEvent", {
             "type": "keyDown",
-            "windowsVirtualKeyCode": 13, # Enter
+            "windowsVirtualKeyCode": 13,
             "text": "\r"
         })
         await self.send_command("Input.dispatchKeyEvent", {
@@ -84,38 +81,23 @@ class PerplexityCDP:
             "windowsVirtualKeyCode": 13
         })
         
-        print("[*] 查詢已送出，等待 AI 生成中...")
-        
-        # 4. Wait for answer to generate
-        # Wait a bit for the UI to transition
+        # Wait for generation to start
         await asyncio.sleep(3)
         
-        # Polling loop
         last_length = 0
         stable_count = 0
-        answer_html = ""
         
         poll_js = """
         (() => {
             let answers = document.querySelectorAll('.prose');
             if(answers.length > 0) {
-                return answers[answers.length - 1].innerText; // Grab raw text to check stability
+                return answers[answers.length - 1].innerText;
             }
             return null;
         })()
         """
         
-        extract_js = """
-        (() => {
-            let answers = document.querySelectorAll('.prose');
-            if(answers.length > 0) {
-                return answers[answers.length - 1].innerHTML; // Grab HTML to preserve Markdown/links
-            }
-            return null;
-        })()
-        """
-
-        for _ in range(60): # Max 60 seconds
+        for _ in range(60):
             text = await self.execute_js(poll_js)
             if text:
                 current_length = len(text)
@@ -126,35 +108,56 @@ class PerplexityCDP:
                 
                 last_length = current_length
                 
-                # If length hasn't changed for 3 seconds, assume generation is complete
                 if stable_count >= 3:
-                    answer_html = await self.execute_js(extract_js)
                     break
-            
             await asyncio.sleep(1)
             
+        # Generation is complete. Now click the copy button.
+        click_js = """
+        (() => {
+            let copyBtns = document.querySelectorAll('button[aria-label="Copy"], button[aria-label="複製"], button[aria-label="复制"]');
+            if(copyBtns.length === 0) return false;
+            let copyBtn = copyBtns[copyBtns.length - 1];
+            copyBtn.click();
+            return true;
+        })()
+        """
+        
+        # Save old clipboard
+        old_cb = pyperclip.paste()
+        # Clear clipboard to detect when copy finishes
+        pyperclip.copy("PENDING_COPY")
+        
+        clicked = await self.execute_js(click_js)
         await self.ws.close()
         
-        if not answer_html:
-            return "錯誤：生成超時或找不到輸出容器。"
+        if not clicked:
+            return "錯誤：找不到複製按鈕。"
             
-        # We can use markdownify or bs4 here to convert HTML back to clean markdown,
-        # but for the raw tool returning HTML is also fine if N2 parses it.
-        # Let's just return the raw text + HTML for now.
-        return answer_html
+        # Poll OS clipboard for up to 3 seconds
+        new_cb = "PENDING_COPY"
+        for _ in range(30):
+            new_cb = pyperclip.paste()
+            if new_cb != "PENDING_COPY":
+                break
+            await asyncio.sleep(0.1)
+            
+        # Restore old clipboard
+        pyperclip.copy(old_cb)
+        
+        if new_cb == "PENDING_COPY":
+            return "錯誤：擷取 Markdown 失敗或超時。"
+            
+        return new_cb
 
 def perplexity_search(query: str) -> str:
-    """
-    N2 Tool interface.
-    """
     client = PerplexityCDP()
     return asyncio.run(client.search(query))
 
 if __name__ == "__main__":
     import sys
-    query = "2026年企業法遵趨勢" if len(sys.argv) == 1 else sys.argv[1]
+    query = "請簡述臺灣2026年企業法遵趨勢，務必附上參考網址" if len(sys.argv) == 1 else sys.argv[1]
     print(f"[*] 啟動查詢: {query}".encode('cp950', 'replace').decode('cp950'))
     res = perplexity_search(query)
     print("\n" + "="*40 + "\n")
-    # Avoid cp950 console errors by replacing unmappable characters
     print(res.encode('cp950', 'replace').decode('cp950'))
