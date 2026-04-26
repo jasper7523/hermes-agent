@@ -2624,7 +2624,10 @@ def _resolve_task_provider_model(
 
         # Fallback: Engineering tasks (N3/N7) prefer NVIDIA NIM if available
         if task == "engineering" and os.getenv("NVIDIA_API_KEY"):
-            return "nvidia", resolved_model or "meta/llama-3.1-405b-instruct", None, None, resolved_api_mode
+            # Override model if it's the default Claude or not specified
+            if not resolved_model or "claude" in resolved_model.lower() or "gpt" in resolved_model.lower():
+                resolved_model = "meta/llama-3.1-405b-instruct"
+            return "nvidia", resolved_model, None, None, resolved_api_mode
 
         return "auto", resolved_model, None, None, resolved_api_mode
 
