@@ -148,6 +148,7 @@ _API_KEY_PROVIDER_AUX_MODELS: Dict[str, str] = {
     "anthropic": "claude-haiku-4-5-20251001",
     "ai-gateway": "google/gemini-3-flash",
     "opencode-zen": "gemini-3-flash",
+    "nvidia": "meta/llama-3.1-405b-instruct",
     "opencode-go": "glm-5",
     "kilocode": "google/gemini-3-flash-preview",
     "ollama-cloud": "nemotron-3-nano:30b",
@@ -2621,9 +2622,52 @@ def _resolve_task_provider_model(
         if cfg_provider and cfg_provider != "auto":
             return cfg_provider, resolved_model, None, None, resolved_api_mode
 
+        # Fallback: Engineering tasks (N3/N7) prefer NVIDIA NIM if available
+        if task == "engineering" and os.getenv("NVIDIA_API_KEY"):
+            return "nvidia", resolved_model or "meta/llama-3.1-405b-instruct", None, None, resolved_api_mode
+
         return "auto", resolved_model, None, None, resolved_api_mode
 
     return "auto", resolved_model, None, None, resolved_api_mode
+
+
+def get_auxiliary_client(
+    task: str = None,
+    provider: str = None,
+    model: str = None,
+    base_url: str = None,
+    api_key: str = None,
+    async_mode: bool = False,
+    main_runtime: Optional[Dict[str, Any]] = None,
+) -> Tuple[Optional[Any], Optional[str]]:
+    """Public helper to get a resolved client and model for a specific task.
+
+    This respects per-task overrides in config.yaml and handles the
+    auto-detection chain.
+    """
+    (
+        resolved_provider,
+        resolved_model,
+        resolved_base_url,
+        resolved_api_key,
+        resolved_api_mode,
+    ) = _resolve_task_provider_model(
+        task=task,
+        provider=provider,
+        model=model,
+        base_url=base_url,
+        api_key=api_key,
+    )
+
+    return _get_cached_client(
+        resolved_provider,
+        resolved_model,
+        async_mode=async_mode,
+        base_url=resolved_base_url,
+        api_key=resolved_api_key,
+        api_mode=resolved_api_mode,
+        main_runtime=main_runtime,
+    )
 
 
 _DEFAULT_AUX_TIMEOUT = 30.0

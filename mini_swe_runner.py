@@ -219,11 +219,8 @@ class MiniSWERunner:
             }
             self.client = OpenAI(**client_kwargs)
         else:
-            from agent.auxiliary_client import resolve_provider_client
-            self.client, _ = resolve_provider_client("openrouter", model=model)
-            if self.client is None:
-                # Fallback: try auto-detection
-                self.client, _ = resolve_provider_client("auto", model=model)
+            from agent.auxiliary_client import get_auxiliary_client
+            self.client, self.model = get_auxiliary_client(task="engineering", model=model)
             if self.client is None:
                 from openai import OpenAI
                 self.client = OpenAI(
