@@ -6,7 +6,7 @@ from mcp.server.fastmcp import FastMCP
 # Initialize FastMCP server
 mcp = FastMCP("Ollama Local Oracle")
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api")
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/api")
 
 @mcp.tool()
 async def ollama_chat(prompt: str, model: str = "gemma4:latest", system_prompt: str = "") -> str:
