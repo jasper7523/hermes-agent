@@ -223,6 +223,8 @@ class PerplexityCDP:
 
             if (copyBtn) {
                 copyBtn.scrollIntoView();
+                // 模擬懸停以觸發某些 UI 組件顯示
+                copyBtn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
                 copyBtn.click();
                 return true;
             }
