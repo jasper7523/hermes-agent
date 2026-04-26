@@ -87,15 +87,33 @@ class PerplexityCDP:
         
         await self.send_command("Input.insertText", {"text": query})
         
-        await self.send_command("Input.dispatchKeyEvent", {
-            "type": "keyDown",
-            "windowsVirtualKeyCode": 13,
-            "text": "\r"
-        })
-        await self.send_command("Input.dispatchKeyEvent", {
-            "type": "keyUp",
-            "windowsVirtualKeyCode": 13
-        })
+        # [N5 Enhancement]: 自動檢測並啟動「深入研究」模式
+        # 等待 UI 對輸入內容產生反應
+        await asyncio.sleep(1.0)
+        click_deep_research_js = """
+        (() => {
+            // 尋找包含「深入研究」字樣的按鈕
+            let btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('深入研究'));
+            if (btn) {
+                btn.click();
+                return true;
+            }
+            return false;
+        })()
+        """
+        triggered_deep = await self.execute_js(click_deep_research_js)
+        
+        if not triggered_deep:
+            # 若沒偵測到深入研究按鈕，則執行標準 Enter 提交
+            await self.send_command("Input.dispatchKeyEvent", {
+                "type": "keyDown",
+                "windowsVirtualKeyCode": 13,
+                "text": "\r"
+            })
+            await self.send_command("Input.dispatchKeyEvent", {
+                "type": "keyUp",
+                "windowsVirtualKeyCode": 13
+            })
         
         # Wait for generation to start
         await asyncio.sleep(3)
