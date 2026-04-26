@@ -14,8 +14,12 @@ class PerplexityCDP:
         self.pending_requests = {}
 
     async def connect(self):
-        req = urllib.request.urlopen(f"http://127.0.0.1:{self.port}/json")
-        targets = json.loads(req.read().decode('utf-8'))
+        try:
+            # [N7 Fail-Fast]: Check if CDP port is alive with 2s timeout
+            req = urllib.request.urlopen(f"http://127.0.0.1:{self.port}/json", timeout=2)
+            targets = json.loads(req.read().decode('utf-8'))
+        except Exception:
+            raise Exception(f"無法連線至 Chrome CDP 埠 {self.port}。請確保已使用捷徑開啟 Oracle 瀏覽器。")
         
         # [N7 Infrastructure Fix]: Look for Perplexity tab specifically
         target_page = None
@@ -156,21 +160,29 @@ class PerplexityCDP:
         
         poll_js = """
         (() => {
-            // 嘗試多種回答區塊選擇器
-            const selectors = [
+            // 嘗試精準選擇回答內文
+            const proseSelectors = [
+                '.prose.max-w-full',
                 '.prose',
                 '[data-testid="answer-content"]',
-                '.markdown-body',
-                '.answer-content',
-                '.default.font-sans'
+                '.markdown-body'
             ];
-            for (let s of selectors) {
+            
+            for (let s of proseSelectors) {
                 let els = document.querySelectorAll(s);
-                if (els.length > 0) return els[els.length - 1].innerText;
+                if (els.length > 0) {
+                    let text = els[els.length - 1].innerText;
+                    // 檢查是否真的包含回答（長度大於 50 且不只是按鈕文字）
+                    if (text.length > 50 && !text.includes('回答 連結 圖片')) return text;
+                }
             }
-            // 備援：抓取包含大量文字的容器
+
+            // 備援：抓取包含大量文字的特定容器，排除 Sidebars
             let main = document.querySelector('main');
-            if (main) return main.innerText;
+            if (main) {
+                let text = main.innerText;
+                if (text.length > 100) return text;
+            }
             return null;
         })()
         """
