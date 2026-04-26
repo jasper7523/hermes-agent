@@ -17,17 +17,33 @@ class PerplexityCDP:
         req = urllib.request.urlopen(f"http://127.0.0.1:{self.port}/json")
         targets = json.loads(req.read().decode('utf-8'))
         
+        # [N7 Infrastructure Fix]: Look for Perplexity tab specifically
+        target_page = None
         for t in targets:
-            if t.get("type") == "page" and "webSocketDebuggerUrl" in t:
-                if "service-worker" not in t.get("url", ""):
-                    self.ws_url = t["webSocketDebuggerUrl"]
+            if t.get("type") == "page" and "perplexity.ai" in t.get("url", ""):
+                target_page = t
+                break
+        
+        if not target_page:
+            # If no Perplexity tab, use the first available regular page
+            for t in targets:
+                if t.get("type") == "page" and not t.get("url", "").startswith("chrome-extension://"):
+                    target_page = t
                     break
-                    
-        if not self.ws_url:
-            raise Exception("Perplexity App main page not found on CDP port.")
+        
+        if not target_page:
+            raise Exception("No suitable browser page found on CDP port.")
             
+        self.ws_url = target_page["webSocketDebuggerUrl"]
         self.ws = await websockets.connect(self.ws_url, ping_interval=None)
         asyncio.create_task(self._receive_loop())
+
+        # If we are not on perplexity.ai, navigate there
+        current_url = target_page.get("url", "")
+        if "perplexity.ai" not in current_url:
+            await self.send_command("Page.navigate", {"url": "https://www.perplexity.ai/"})
+            # Wait for navigation and initial load
+            await asyncio.sleep(5)
 
     async def _receive_loop(self):
         try:
@@ -82,9 +98,23 @@ class PerplexityCDP:
         # Wait for the new thread UI to initialize
         await asyncio.sleep(1.5)
         
-        focus_js = "document.getElementById('ask-input').focus();"
-        await self.execute_js(focus_js)
-        
+        # Ensure we are focused on the input. Try multiple selectors.
+        focus_js = """
+        (() => {
+            let input = document.getElementById('ask-input') || 
+                        document.querySelector('textarea') || 
+                        document.querySelector('input[type="text"]');
+            if (input) {
+                input.focus();
+                return true;
+            }
+            return false;
+        })()
+        """
+        if not await self.execute_js(focus_js):
+            await self.ws.close()
+            return "錯誤：找不到輸入框 (ask-input)。"
+            
         await self.send_command("Input.insertText", {"text": query})
         
         # [N5 Enhancement]: 自動檢測並啟動「深入研究」模式
@@ -93,7 +123,10 @@ class PerplexityCDP:
         click_deep_research_js = """
         (() => {
             // 尋找包含「深入研究」字樣的按鈕
-            let btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('深入研究'));
+            let btn = Array.from(document.querySelectorAll('button')).find(b => 
+                b.innerText.includes('深入研究') || 
+                (b.getAttribute('aria-label') && b.getAttribute('aria-label').includes('深入研究'))
+            );
             if (btn) {
                 btn.click();
                 return true;
@@ -123,10 +156,21 @@ class PerplexityCDP:
         
         poll_js = """
         (() => {
-            let answers = document.querySelectorAll('.prose');
-            if(answers.length > 0) {
-                return answers[answers.length - 1].innerText;
+            // 嘗試多種回答區塊選擇器
+            const selectors = [
+                '.prose',
+                '[data-testid="answer-content"]',
+                '.markdown-body',
+                '.answer-content',
+                '.default.font-sans'
+            ];
+            for (let s of selectors) {
+                let els = document.querySelectorAll(s);
+                if (els.length > 0) return els[els.length - 1].innerText;
             }
+            // 備援：抓取包含大量文字的容器
+            let main = document.querySelector('main');
+            if (main) return main.innerText;
             return null;
         })()
         """
@@ -149,11 +193,40 @@ class PerplexityCDP:
         # Generation is complete. Now click the copy button.
         click_js = """
         (() => {
-            let copyBtns = document.querySelectorAll('button[aria-label="Copy"], button[aria-label="複製"], button[aria-label="复制"]');
-            if(copyBtns.length === 0) return false;
-            let copyBtn = copyBtns[copyBtns.length - 1];
-            copyBtn.click();
-            return true;
+            // 嘗試多種可能的選擇器 (包含 SVG 圖標偵測)
+            const selectors = [
+                'button[aria-label="Copy"]', 
+                'button[aria-label="複製"]', 
+                'button[aria-label="复制"]',
+                'button:has(svg[data-icon="copy"])',
+                'button:has(svg path[d*="M16"])', // 典型的複製圖標路徑片段
+                '.prose + div button' // prose 區塊下方的按鈕群
+            ];
+            
+            let copyBtn = null;
+            for (let s of selectors) {
+                let btns = document.querySelectorAll(s);
+                if (btns.length > 0) {
+                    copyBtn = btns[btns.length - 1];
+                    break;
+                }
+            }
+            
+            if (!copyBtn) {
+                // 最後手段：尋找所有按鈕，檢查其 title 或 innerText
+                let allBtns = Array.from(document.querySelectorAll('button'));
+                copyBtn = allBtns.reverse().find(b => 
+                    (b.title && (b.title.includes('Copy') || b.title.includes('複製'))) ||
+                    (b.innerText && (b.innerText.includes('Copy') || b.innerText.includes('複製')))
+                );
+            }
+
+            if (copyBtn) {
+                copyBtn.scrollIntoView();
+                copyBtn.click();
+                return true;
+            }
+            return false;
         })()
         """
         
@@ -162,11 +235,20 @@ class PerplexityCDP:
         # Clear clipboard to detect when copy finishes
         pyperclip.copy("PENDING_COPY")
         
-        clicked = await self.execute_js(click_js)
-        await self.ws.close()
-        
+        clicked = False
+        # Retry clicking for 3 seconds (sometimes the UI takes a moment to render the buttons)
+        for _ in range(6):
+            clicked = await self.execute_js(click_js)
+            if clicked: break
+            await asyncio.sleep(0.5)
+
         if not clicked:
-            return "錯誤：找不到複製按鈕。"
+            # Fallback: 如果真的找不到複製按鈕，直接抓取內容回傳 (雖然不是 Markdown 但總比錯誤好)
+            fallback_text = await self.execute_js(poll_js)
+            await self.ws.close()
+            if fallback_text:
+                return f"注意：無法點擊複製按鈕，已採樣直接提取內容。\n\n{fallback_text}"
+            return "錯誤：找不到複製按鈕，且直接提取內容失敗。"
             
         # Poll OS clipboard for up to 3 seconds
         new_cb = "PENDING_COPY"
