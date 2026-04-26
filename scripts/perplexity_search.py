@@ -39,10 +39,13 @@ class PerplexityCDP:
             raise Exception("No suitable browser page found on CDP port.")
             
         self.ws_url = target_page["webSocketDebuggerUrl"]
+        print(f"[*] Connecting to WebSocket: {self.ws_url}")
         self.ws = await websockets.connect(self.ws_url, ping_interval=None)
+        print("[*] WebSocket Connected.")
         asyncio.create_task(self._receive_loop())
 
         if "perplexity.ai" not in target_page.get("url", ""):
+            print("[*] Navigating to Perplexity...")
             await self.send_command("Page.navigate", {"url": "https://www.perplexity.ai/"})
             await asyncio.sleep(5)
 
@@ -57,26 +60,37 @@ class PerplexityCDP:
 
     async def send_command(self, method, params=None):
         if params is None: params = {}
+        if not self.ws or self.ws.closed:
+            print("[!] Connection lost, attempting to reconnect...")
+            await self.connect()
+            
         msg_id = self.msg_id
         self.msg_id += 1
         future = asyncio.get_running_loop().create_future()
         self.pending_requests[msg_id] = future
-        await self.ws.send(json.dumps({"id": msg_id, "method": method, "params": params}))
-        return await future
+        try:
+            await self.ws.send(json.dumps({"id": msg_id, "method": method, "params": params}))
+            return await future
+        except Exception as e:
+            print(f"[!] Send failed: {e}")
+            return {}
 
     async def execute_js(self, js_code):
         resp = await self.send_command("Runtime.evaluate", {"expression": js_code, "awaitPromise": True, "returnByValue": True})
         return resp.get("result", {}).get("result", {}).get("value")
 
     async def search(self, query: str):
+        print(f"[*] Starting search for: {query}")
         await self.connect()
         
         # 1. 強制重置線程 (Ctrl+I)
+        print("[*] Resetting thread (Ctrl+I)...")
         await self.send_command("Input.dispatchKeyEvent", {"type": "keyDown", "modifiers": 2, "windowsVirtualKeyCode": 73, "text": "i"})
         await self.send_command("Input.dispatchKeyEvent", {"type": "keyUp", "modifiers": 2, "windowsVirtualKeyCode": 73})
         await asyncio.sleep(2.0)
         
         # 2. 聚焦輸入框 (強效版 JS)
+        print("[*] Focusing input...")
         focus_js = """
         (() => {
             let input = document.getElementById('ask-input') || 
@@ -94,41 +108,39 @@ class PerplexityCDP:
             return "錯誤：無法聚焦輸入框。"
 
         # 3. 填入文字
+        print("[*] Inserting text...")
         await self.send_command("Input.insertText", {"text": query})
         await asyncio.sleep(1.0)
         
         # 4. 發送 Enter
+        print("[*] Sending Enter...")
         await self.send_command("Input.dispatchKeyEvent", {"type": "keyDown", "windowsVirtualKeyCode": 13, "text": "\r"})
         await self.send_command("Input.dispatchKeyEvent", {"type": "keyUp", "windowsVirtualKeyCode": 13})
         
         # 5. 等待內容生成 (強化過濾 Demo 文字)
-        poll_js = """
-        (() => {
-            const proseSelectors = ['.prose.max-w-full', '.prose', '[data-testid="answer-content"]'];
-            for (let s of proseSelectors) {
-                let els = document.querySelectorAll(s);
-                if (els.length > 0) {
-                    let text = els[els.length - 1].innerText;
-                    // 關鍵：排除 Perplexity 首頁的範例對話文字
-                    if (text.length > 50 && !text.includes('建立原型') && !text.includes('招募')) return text;
-                }
-            }
-            return null;
-        })()
-        """
+        print("[*] Polling for response (Wait 5s initial)...")
+        await asyncio.sleep(5.0) # 給 AI 一點時間
         
         last_length = 0
         stable_count = 0
-        for _ in range(60):
-            text = await self.execute_js(poll_js)
-            if text:
-                if len(text) == last_length and len(text) > 50:
-                    stable_count += 1
-                else:
-                    stable_count = 0
-                last_length = len(text)
-                if stable_count >= 3: break
-            await asyncio.sleep(1.5)
+        for i in range(40):
+            try:
+                text = await self.execute_js(poll_js)
+                if text:
+                    curr_len = len(text)
+                    if curr_len > 100 and curr_len == last_length:
+                        stable_count += 1
+                    else:
+                        stable_count = 0
+                    last_length = curr_len
+                    if stable_count >= 3: 
+                        print(f"[*] Content stabilized at {curr_len} chars.")
+                        break
+                print(f"[*] Polling... ({i+1}/40) - Current length: {len(text) if text else 0}")
+                await asyncio.sleep(2.0)
+            except Exception as e:
+                print(f"[!] Polling error: {e}")
+                await asyncio.sleep(1.0)
 
         # 6. 點擊複製
         click_js = """
