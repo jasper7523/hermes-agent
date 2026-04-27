@@ -1,0 +1,108 @@
+INTRODUCTION: CORPORATE CRIME AND ITS CONSTRAINT
+Roshima Said, David Crowther and Azlan Amran
+
+ABSTRACT
+Purpose – Corporate crime affects the stability of the international financial system and the business world system has made
+considerable efforts to fight all aspects of corporate crimes. Fraud and white-collar crime has increased considerably over the
+recent years and this trend is expected to continue.
+Design/methodology/approach – This chapter defines corporate crime and its categories as well as considering the ways in
+which such crime occurs. This is set within the context of other failures such as Enron.
+Findings – These crimes are considered in the context of ethical behaviour but it is reported that the various measures taken to
+dissuade these crimes at various levels just have not seems to reduce such crime.
+Research limitations/implications – In many respects this chapter introduces the contexts and acts as preparation for the other
+chapters in the book and so is not exhaustive in scope.
+Practical and social implications – Since not all fraud and abuse is discovered and reported, the cost of fraud to businesses is
+hard to be estimated.
+Originality/value – The chapter discusses the context in which corporate crime occurs.
+Keywords: corporate crime; business ethic; governance; corporate failure
+
+INTRODUCTION
+For several decades corporate crime has been affecting the stability of the international financial system. Consequently, the business
+world system has made considerable efforts to fight all aspects of corporate crimes. Fraud and white-collar crime has increased
+considerably over the recent years and professionals believe this trend is expected to continue. Since not all fraud and abuse is
+discovered and reported, the cost of fraud to businesses is hard to be estimated. But the statistics show an extremely large value
+associated with fraud. Fraud and crime can be difficult to detect and are motivated by many different factors and can be achieved in
+many ways. PricewaterhouseCoopers Global Economic Crime Survey 2005 reported members of senior management being
+incriminated in 21 per cent of the reported cases, which is higher than the 17 per cent registered for the Asia and Pacific region and 18
+per cent globally.
+According to KPMG, The Fraud Survey (2003) revealed that despite that financial reporting fraud is the least prevalent type of
+fraud, it is the most costly form of fraud with the average dollar loss of more than $250 million per incidence of fraud. Ernst and
+Young’s 9th Annual Global Survey (2006) commented that, ‘While occurring less often than other type of fraud, financial statement
+fraud frequently does the most harm to organizations’. The Association of Certified Fraud Examiners (ACFE) Report to the Nation on
+Occupational Fraud and Abuse (2008) indicates that financial statement fraud constitute only 10% of all cases studied, but it is most
+costly form of fraud. The median loss caused by fraudulent statement in the study was $2 million, whereas asset misappropriation and
+corruptions constitute $150,000 and $375,000, respectively.
+The Committee of Sponsoring Organizations of the Treadway Commission (COSO) did an analysis of the fraudulent financial
+reporting on the approximately 200 public companies in the United States for the period from 1987 to 1997, conducted by Beasley,
+Carcello, and Hermanson (1999), found that the incidence of fraud usually involved the top senior executive. In 72 per cent of the
+cases, the chief executive officer (CEO) was associated with financial statement fraud. The recent survey conducted by Association of
+Certified Fraud Examiners (ACFE) Report to the Nation on Occupational Fraud and Abuse (2008) reported that the executive and
+upper management level employees are more likely to be involved in corruption and fraudulent statement while over one-fourth of all
+executive level cases involved fraudulent financial statements.
+The accounting scandals occurring at prominent companies such as Enron, HealthSouth, Tyco, Worldcom recently, seem to
+indicate flaws in the accounting profession, corporate governance, regulatory bodies and, as a result, have shaken the confidence of
+investors. Many of these of companies have been forced to file for bankruptcy. Reported earnings are unreliable due to increase in the
+frequency of earnings restatements by firms (Agrawal & Chadha, 2005). There are an increasing number of restatements (Plumlee &
+Yohn, 2008). In the United States, the restatement of financial statements almost doubled from 2004 (616) to 2005 (1,195),
+representing almost 8.5% of publicly traded companies. According to Apostolou and Crumbley (2008), there are three areas
+responsible for restatements, namely equity, revenue recognition, and misclassification. The risks associated with financial crime
+intimidate to weaken the strength of the international financial system (Atbani, 2007).
+Corporate crime and scandals have been the main issues in the corporate world. Recently, the stakeholders, including employees,
+shareholders, customers, suppliers, etc. are demanding higher accountability and the adoption of more socially responsible business
+practices, embracing effective corporate governance and the carrying out of ethical business relationships. Thus, businesses are
+expected to put into practice ethical behaviour and not exclusively in the specific codes of conduct of their particular firms and
+industries. Business ethics is both a growing concern and evolving philosophy. Some organizations are self-regulating themselves and
+making conscious efforts to behave ethically and contribute positively to their communities. Mitton (2002) suggests that weak
+corporate governance has been considered as one of the causes of the East Asian financial crisis.
+Corporate governance is the process and structure that is used to direct and manage the business and affairs of the company
+towards enhancing business prosperity and corporate accountability. A McKinsey survey (2000) found that a majority of investors
+would pay a premium for the shares of a well-governed company. Essentially, they discovered that investors are willing to pay more
+for well-governed Malaysian companies than for a poorly governed one with a comparable financial performance. A good corporate
+governance practice and ethical business practices is believed to reflect the image and value of a company and becomes one way to
+attract and restore investors' confidence.
+
+WHAT IS CORPORATE CRIME?
+In the point of view of criminologists, the definition of corporate crime refers to acts or behaviour in defiance of the law that are
+committed by corporations, or individuals within organizational entities or individuals that act on behalf of a business entity. Corporate
+crime is also closely related with white-collar crime, organized crime, and state-corporate crime (Hartley, 2008).
+According to Sutherland (1949) in Zitao (1990) white-collar crime is defined as crime of respectable business and professional
+people. He defined a white-collar crime as a ‘crime committed by a person of respectability and high social status in the course of his
+occupation’. According to Zitao (1990), Sutherland’s definition failed to distinguish between crimes committed by corporations as a
+collective unit, and the crimes of their individual members, or corporate and individual crime. Later, Clinard and Quinney
+(1973) in Zitao (1990) divided white-collar crime into two major group namely occupational crime and corporate crime. Occupational
+crimes as defined by Clinard and Quinney (1973) as ‘offenses committed by individuals for themselves in the course of their
+occupations and the offenses by their employees against their employers’, while corporate crime are ‘offenses committed by corporate
+officials for their corporation and the offenses of the corporation itself’. This definition undoubtedly explained the differences between
+occupational and corporate crimes particularly the rationalization of the lies in the victims and beneficiaries. Corporate crime will have
+an impact on both, the organization and the individual players; whereas occupational crimes only benefit the individual player.
+In social psychological terms, white-collar crimes variously referred to as ‘crimes of the middle class’ (Weisburd, Wheeler,
+Waring, & Bode, 1991), ‘crimes of privilege’ (Shover & Wright, 2001), and ‘elite deviance’ (Simon, 2002) are the crimes of majority
+group members.
+Organized crime is a concept of crime is where the unlawful person or agencies will use the organizations for the purpose of crime.
+Sometimes, the criminals may make use of organizations for laundering the proceeds of crime. Whereas, the state-corporate crime is a
+concept of any outlook to acclaim crime come into view any relationship between the corporation and the state where the corporations
+are operating.
+
+FACTORS CONTRIBUTING TOWARDS CORPORATE CRIME IN AN ORGANIZATION
+The route of corporate failure such as Enron, Worldcom and many more has been a world debate. The current economic and financial
+crisis, brought on in part by the risky and unethical behaviours of business, has drawn attention to corporate crime, particularly on the
+issue of how to prevent it.
+Zahra, Priem, and Rasheed (2007) suggest there are several societal, industry and organizational factors that can pressure
+management and encourage their fraudulent behaviour. They suggest three key factors that is (i) societal level pressure, (ii) industry level pressure, and (iii) company or organizational level pressure. First, societal level pressures used societal or group-level theories to
+explain the social nature of criminal behaviour. At the broader societal level, anomie theory suggests individuals who are unable to
+achieve their aspirations by experience alone, may use deviant means to achieve their desired ends. Second, the industry-level
+pressures involve challenging industry conditions that cause and intensify fraud. This involves (a) industry cultures; (b) norms and
+histories; (c) industry investment horizons; (d) payback periods and financial returns; (e) industry concentration; (f) environmental
+hostility; (g) environmental dynamism; and (h) environmental heterogeneity.
+Baucus and Near (1991) identify four proposition of corporate misconduct which support the likelihood of illegal activity. These
+are occurring within larger organizations, firms operating in dynamic environments, firms that had accrued prior violations and firm
+operated within certain industries. Baucus and Baucus (1997) find support that corporate illegal activity has little effect on financial
+performance of firms convicted of wrongdoing, but the incidence of multiple convictions has negatively impact performance.
+Szwajkowski (1985) proposed that three distinct interacting elements from the stimuli of corporate crime:
+1. The environment – the environmental factors such as pressure or need may stimulate illegal behaviour in the situation when
+the estimated benefit of the misbehaviour exceeds its estimated cost.
+2. Structure – corporate structure, industrial structure, or legal structure. The second factor suggests an organization’s structural
+complexity which due to its complexity nature, provide a good grounds for allowing managers to commit illegal acts.
+3. Inner directed choice processes – individual pathology, individual intent, or proactive exploitation. The third factor is the
+managerial choice to misbehave He argued that the misbehave behaviour of the managers is a choice since ‘evil people do evil
+things’ although the environmental or structural conditions may not stimulate the occurrence of illegal behaviour.
