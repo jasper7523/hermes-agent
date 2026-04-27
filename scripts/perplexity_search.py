@@ -60,7 +60,20 @@ class PerplexityCDP:
 
     async def send_command(self, method, params=None):
         if params is None: params = {}
-        if not self.ws or self.ws.state.name == "CLOSED":
+        is_closed = True
+        if self.ws:
+            try:
+                # 兼容不同版本的 websockets 庫
+                if hasattr(self.ws, 'closed'):
+                    is_closed = self.ws.closed
+                elif hasattr(self.ws, 'state'):
+                    is_closed = str(self.ws.state.name) == "CLOSED"
+                else:
+                    is_closed = False
+            except Exception:
+                is_closed = True
+
+        if not self.ws or is_closed:
             print("[!] Connection lost, attempting to reconnect...")
             await self.connect()
             
