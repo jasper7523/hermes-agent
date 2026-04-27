@@ -134,6 +134,17 @@ class PerplexityCDP:
         print("[*] Polling for response (Wait 5s initial)...")
         await asyncio.sleep(5.0) # 給 AI 一點時間
         
+        poll_js = """
+        (() => {
+            // 抓取最後一個回答區塊的文字
+            let nodes = document.querySelectorAll('.prose');
+            if (nodes.length > 0) {
+                return nodes[nodes.length - 1].innerText;
+            }
+            return "";
+        })()
+        """
+        
         last_length = 0
         stable_count = 0
         for i in range(40):
