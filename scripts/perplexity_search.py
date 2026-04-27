@@ -60,7 +60,7 @@ class PerplexityCDP:
 
     async def send_command(self, method, params=None):
         if params is None: params = {}
-        if not self.ws or self.ws.closed:
+        if not self.ws or self.ws.state.name == "CLOSED":
             print("[!] Connection lost, attempting to reconnect...")
             await self.connect()
             
