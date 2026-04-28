@@ -10,8 +10,9 @@ import pyperclip
 
 # [N7 Security]: Redirect all stdout to stderr to prevent MCP protocol corruption
 def print(*args, **kwargs):
-    kwargs['file'] = sys.stderr
-    __builtins__.print(*args, **kwargs)
+    msg = " ".join(map(str, args))
+    sys.stderr.write(msg + "\n")
+    sys.stderr.flush()
 
 # [N7 Security Restore]: Reverting to pure Python CDP (WebSockets) to maintain stealth
 # This avoids Playwright/Puppeteer detection fingerprints used by Perplexity.
