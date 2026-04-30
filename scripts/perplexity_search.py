@@ -129,6 +129,66 @@ class PerplexityCDP:
         if not await self.execute_js(focus_js):
             return "錯誤：無法聚焦輸入框。"
 
+        # 2.5 設置選項 (Deep Research, Sources, Best Model)
+        print("[*] Configuring Pro Search, Sources, and Model...")
+        config_js = """
+        (() => {
+            try {
+                // 1. 強制啟用 Deep Research / Pro Search (除非額度用盡被 disabled)
+                const proToggle = document.querySelector('button[aria-label*="Pro search"], button[aria-label*="Deep Research"], button[aria-label*="深入研究"]');
+                if (proToggle) {
+                    const isChecked = proToggle.getAttribute('aria-checked') === 'true' || proToggle.classList.contains('active');
+                    const isDisabled = proToggle.disabled || proToggle.getAttribute('aria-disabled') === 'true';
+                    if (!isChecked && !isDisabled) {
+                        proToggle.click();
+                    }
+                }
+                
+                // 2. 勾選所有 Sources (不含 Connectors)
+                // 點擊 Focus 按鈕 (如果存在)
+                const focusBtn = document.querySelector('button[aria-label*="Focus"], button[aria-label*="焦點"]');
+                if (focusBtn) {
+                    focusBtn.click();
+                    // 嘗試勾選所有非 Connector 的選項
+                    setTimeout(() => {
+                        const sourceCheckboxes = document.querySelectorAll('div[role="menu"] input[type="checkbox"], div[role="dialog"] input[type="checkbox"]');
+                        sourceCheckboxes.forEach(cb => {
+                            const label = cb.closest('label') ? cb.closest('label').innerText.toLowerCase() : '';
+                            if (!label.includes('connector') && !cb.checked) {
+                                cb.click();
+                            }
+                        });
+                        // 再次點擊 Focus 按鈕關閉選單
+                        focusBtn.click();
+                    }, 500);
+                }
+                
+                // 3. 選擇最佳 (Best) 模型
+                // 點擊 Model 選單 (如果存在)
+                const modelBtn = document.querySelector('button[aria-label*="Model"], button[aria-label*="模型"]');
+                if (modelBtn) {
+                    modelBtn.click();
+                    setTimeout(() => {
+                        // 尋找包含 Best 或 Sonar Pro / Claude 3.5 Sonnet / GPT-4o 的選項
+                        const options = document.querySelectorAll('div[role="menu"] button, div[role="menu"] [role="option"]');
+                        for (let opt of options) {
+                            const text = opt.innerText.toLowerCase();
+                            if (text.includes('best') || text.includes('pro') || text.includes('sonnet') || text.includes('gpt-4o')) {
+                                opt.click();
+                                break;
+                            }
+                        }
+                    }, 500);
+                }
+            } catch (e) {
+                console.error("Configuration error:", e);
+            }
+            return true;
+        })()
+        """
+        await self.execute_js(config_js)
+        await asyncio.sleep(1.5) # 給 UI 動畫一點時間
+
         # 3. 填入文字
         print("[*] Inserting text...")
         await self.send_command("Input.insertText", {"text": query})
