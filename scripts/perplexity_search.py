@@ -175,42 +175,51 @@ class PerplexityCDP:
                 print(f"[!] Polling error: {e}")
                 await asyncio.sleep(1.0)
 
-        # 6. 點擊複製
-        click_js = """
+        # 6. 提取內容 (直接從 DOM 提取，不依賴剪貼簿)
+        print("[*] Extracting final content...")
+        final_extract_js = """
         (() => {
-            const selectors = ['button[aria-label*="Copy"]', 'button[aria-label*="複製"]', 'button:has(svg[data-icon="copy"])'];
-            for (let s of selectors) {
-                let btns = document.querySelectorAll(s);
-                if (btns.length > 0) {
-                    btns[btns.length - 1].click();
-                    return true;
-                }
+            const nodes = document.querySelectorAll('.prose');
+            if (nodes.length > 0) {
+                // 獲取最後一個回答
+                let mainContent = nodes[nodes.length - 1].innerText;
+                
+                // 嘗試獲取引用連結 (Sources)
+                let sources = [];
+                document.querySelectorAll('a[href*="http"]').forEach(a => {
+                    let href = a.href;
+                    if (href.includes('google.com') || href.includes('perplexity.ai')) return;
+                    if (!sources.includes(href)) sources.push(href);
+                });
+                
+                return {
+                    text: mainContent,
+                    sources: sources
+                };
             }
-            return false;
+            return null;
         })()
         """
         
-        old_cb = pyperclip.paste()
-        pyperclip.copy("PENDING")
-        clicked = await self.execute_js(click_js)
-        
-        if clicked:
-            for _ in range(30):
-                new_cb = pyperclip.paste()
-                if new_cb != "PENDING":
-                    pyperclip.copy(old_cb)
-                    await self.ws.close()
-                    return new_cb
-                await asyncio.sleep(0.1)
-        
+        result = await self.execute_js(final_extract_js)
         await self.ws.close()
-        if last_length > 50:
-            return f"注意：複製失敗，已採樣直接提取內容。\n\n{text}"
+        
+        if result and result.get("text"):
+            text = result["text"]
+            sources = result.get("sources", [])
+            output = text
+            if sources:
+                output += "\n\n### 引用來源 (Sources):\n" + "\n".join([f"- {s}" for s in sources])
+            return output
+            
         return "錯誤：擷取失敗或內容過短。"
 
 def perplexity_search(query: str) -> str:
     client = PerplexityCDP()
-    return asyncio.run(client.search(query))
+    try:
+        return asyncio.run(client.search(query))
+    except Exception as e:
+        return f"錯誤：Perplexity 執行失敗 - {str(e)}"
 
 if __name__ == "__main__":
     import sys
