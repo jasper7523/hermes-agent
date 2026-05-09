@@ -1,6 +1,6 @@
 # 引力錨 v2.0 —— 施工計畫書 (Construction Plan)
 
-> **對應設計**: [Gravity_Anchor_v2_Implementation_Plan.md](./Gravity_Anchor_v2_Implementation_Plan.md) v2.0.6  
+> **對應設計**: [Gravity_Anchor_v2_Implementation_Plan.md](./Gravity_Anchor_v2_Implementation_Plan.md) v2.0.7  
 > **撰寫者**: N7 (Hermes Agent)  
 > **日期**: 2026-05-09  
 > **狀態**: 待核准
@@ -11,7 +11,7 @@
 
 | Phase | 名稱 | 預估工時 | 前置條件 | 關鍵交付物 |
 |---|---|---|---|---|
-| **Phase 1** | 基礎層建立 | ~2h | 無 | GEMINI.md v2.0 + Canary Token |
+| **Phase 1** | 基礎層建立 | ~2h | 無 | 文件架構骨架 + GEMINI.md v2.0 + Canary Token |
 | **Phase 2** | 評估層建立 | ~4h | Phase 1 完成 | N7 Evaluator Protocol + Sprint Contract |
 | **Phase 3** | 熵管理層建立 | ~4h | Phase 1 完成 | N9 Rules + 一致性檢查腳本 |
 | **Phase 4** | 壓力測試 | ~1 週 | Phase 1-3 完成 | 測試報告 + 承重性分析 |
@@ -28,10 +28,10 @@ Phase 1 ──→ Phase 2 ──→ Phase 4 ──→ Phase 5
 ## Phase 1：基礎層建立（~2h）
 
 ### 目標
-重構 `GEMINI.md`，從 43 行靜態規則升級為 ~103 行五層 Harness 入口，嵌入六個中介軟體與 Canary Token。
+建立 `docs/Harness/` 結構化文件架構骨架，並重構 `GEMINI.md` 為 ~103 行五層 Harness 入口。
 
 ### 前置條件
-- [x] Implementation Plan v2.0.6 已核准
+- [x] Implementation Plan v2.0.7 已核准
 - [ ] 備份現有 `GEMINI.md`
 
 ### 施工步驟
@@ -41,6 +41,16 @@ Phase 1 ──→ Phase 2 ──→ Phase 4 ──→ Phase 5
 操作：複製 C:\Users\promy\.gemini\GEMINI.md
 目標：C:\Users\promy\.gemini\GEMINI.md.backup.20260509
 類型：非破壞性
+```
+
+#### Step 1.1½：建立 docs/Harness/ 文件架構骨架
+```
+操作：
+  建立子目錄：design-docs/, exec-plans/, product-specs/, references/, generated/
+  移動現有研究報告到 references/
+  移動現有計畫書到 exec-plans/
+  撰寫 README.md（文件架構索引）
+驗證：6 個子目錄存在 + README.md 完整
 ```
 
 #### Step 1.2：撰寫 GEMINI.md v2.0 §0 拓樸定義
@@ -161,7 +171,8 @@ MW6: LoopDetection（連續失敗 2 次即停）
 
 #### Step 2.3：建立 Sprint Contract Template
 ```
-檔案：d:\hermes-agent\.agent_comms\contracts\TEMPLATE.md
+檔案：docs/Harness/product-specs/sprint-contract-spec.md
+      + .agent_comms/contracts/TEMPLATE.md（範本副本）
 內容：
   - 合約編號 / 發包 Agent / 接收 Agent
   - 交付物定義
@@ -169,18 +180,25 @@ MW6: LoopDetection（連續失敗 2 次即停）
   - 範圍邊界（明確排除項）
   - 預估工時
   - N7 審查簽核欄
-驗證：模板欄位完整，可直接複製使用
+驗證：規格文件 + 範本皆完整
 ```
 
 #### Step 2.4：建立 Task Brief Template
 ```
-檔案：d:\hermes-agent\.agent_comms\contracts\TASK_BRIEF_TEMPLATE.md
+檔案：.agent_comms/contracts/TASK_BRIEF_TEMPLATE.md
 內容：
   - 請求 Agent / 目標 Agent
   - 交付物定義
   - 格式要求
   （輕量版，不需驗證標準與範圍邊界）
 驗證：與 Sprint Contract 明確區分
+```
+
+#### Step 2.5½：撰寫 Canary Token Spec
+```
+檔案：docs/Harness/product-specs/canary-token-spec.md
+內容：嵌入位置、格式、偵測機制、N9 整合
+驗證：與 GEMINI.md §2 Canary Token 一致
 ```
 
 #### Step 2.5：建立 .agent_comms/ 目錄結構
@@ -223,8 +241,7 @@ Sprint Contract 不適用：刪除 .agent_comms/（不影響核心功能）
 
 #### Step 3.1：撰寫 N9 Entropy Guardian Rules
 ```
-檔案路徑：待定（需決定 N9 是否有獨立 Workspace）
-備案：d:\hermes-agent\.agents\rules\entropy-guardian.md
+檔案：d:\hermes-agent\.agents\rules\entropy-guardian.md
 內容：
   - 身份覆寫協定（覆寫為 N9）
   - 排程定義：每日輕量 + 每週深度
@@ -251,13 +268,31 @@ Sprint Contract 不適用：刪除 .agent_comms/（不影響核心功能）
 
 #### Step 3.3：撰寫 Harness Audit Checklist
 ```
-檔案：d:\hermes-agent\docs\Harness\harness_audit_checklist.md
+檔案：docs/Harness/exec-plans/harness_audit_checklist.md
 內容：
   - Gemini 模型更新時的壓測步驟
   - 逐組件移除測試流程
   - 承重/裝飾分類紀錄表
   - Harness 版本升級 SOP
 驗證：文件完整、步驟可操作
+```
+
+#### Step 3.3½：建立技術債追蹤器
+```
+檔案：docs/Harness/exec-plans/tech-debt-tracker.md
+內容：N9 掃描結果匯入 + 已知技術債清單
+驗證：檔案存在，格式可追蹤
+```
+
+#### Step 3.3¾：填充 design-docs/ 設計文件
+```
+檔案：
+  docs/Harness/design-docs/core-beliefs.md
+  docs/Harness/design-docs/topology-N0-N9.md
+  docs/Harness/design-docs/middleware-specs.md
+  docs/Harness/design-docs/permission-pipeline.md
+來源：從 Implementation Plan 各章節獨立展開為完整文件
+驗證：4 個文件存在且與 GEMINI.md §6 交叉引用正確
 ```
 
 #### Step 3.4：升級降落備忘錄機制
@@ -312,15 +347,16 @@ N9 Rules：刪除 .agents/rules/entropy-guardian.md（不影響核心）
 逐一移除 MW1-MW6，觀察行為變化：
   - 移除後行為明顯惡化 → 承重組件（保留）
   - 移除後無明顯影響 → 裝飾組件（標記為可選）
-紀錄到 docs/Harness/harness_audit_checklist.md
+紀錄到 docs/Harness/exec-plans/harness_audit_checklist.md
 ```
 
 ### Phase 4 交付物
 
 | # | 交付物 | 路徑 |
 |---|---|---|
-| D4.1 | 壓測報告 | `docs/Harness/pressure_test_report.md` |
-| D4.2 | 承重性分析 | `docs/Harness/harness_audit_checklist.md`（更新） |
+| D4.1 | 壓測報告 | `docs/Harness/generated/pressure_test_report.md` |
+| D4.2 | 承重性分析 | `docs/Harness/exec-plans/harness_audit_checklist.md`（更新） |
+| D4.3 | 品質評分 | `docs/Harness/QUALITY_SCORE.md` |
 
 ---
 
@@ -388,9 +424,10 @@ N9 Rules：刪除 .agents/rules/entropy-guardian.md（不影響核心）
 | D5.1 | N5 Rules 對齊 | `Book_Writer_Agent/.agents/rules/` |
 | D5.2 | N8 Rules 對齊 | `Academic_Oracle_Agent/.agents/rules/` |
 | D5.3 | N2-N4 骨架 | 各自 Workspace |
-| D5.4 | N6 設計文件 | `docs/Harness/n6_memory_design.md` |
-| D5.5 | 平衡報告 | `docs/Harness/guides_sensors_balance.md` |
-| D5.6 | Release Notes | `docs/Harness/release_notes_v2.md` |
+| D5.4 | N6 設計文件 | `docs/Harness/design-docs/n6_memory_design.md` |
+| D5.5 | 平衡報告 | `docs/Harness/generated/guides_sensors_balance.md` |
+| D5.6 | Release Notes | `docs/Harness/exec-plans/release_notes_v2.md` |
+| D5.7 | 文件架構校驗 | 全部交叉引用正確 |
 
 ---
 

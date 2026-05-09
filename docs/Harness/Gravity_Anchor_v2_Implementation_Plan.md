@@ -1,6 +1,6 @@
 # 引力錨 v2.0 (Gravity Anchor v2.0) —— Antigravity Agent 全域 Harness 架構
 
-> **版本**: v2.0.6（解決全部 Open Questions：N9 頻率 / Gemma 校準 / Canary Token）  
+> **版本**: v2.0.7（納入 Harness 文件架構設計）  
 > **設計者**: N7 (Hermes Agent)  
 > **日期**: 2026-05-09  
 > **研究基礎**: 7 份 Harness Engineering 研究報告交叉萃取  
@@ -399,16 +399,74 @@ Gemini 模型更新時：
 
 ---
 
+## 七½、Harness 文件架構設計（Document Architecture）
+
+> [!IMPORTANT]
+> 研究報告一致指出：**GEMINI.md 是地圖，不是手冊**。~100 行的入口只負責指路，深度內容全部外掛到結構化目錄。這是 OpenAI、Anthropic、deusyu 三份報告的共同模式。
+
+### 文件架構總覽
+
+```
+GEMINI.md (§6 Deep References)     ← 指向 ↓ 這個目錄
+│
+d:\hermes-agent\docs\Harness\
+├── README.md                       ← 文件架構索引（ARCHITECTURE.md 等效）
+│
+├── design-docs/                    ← 設計決策（WHY）
+│   ├── core-beliefs.md              ← 核心信念：最高禁令 + 六大心智框架的深度解釋
+│   ├── topology-N0-N9.md            ← 拓樸完整定義（從 Plan §一 獨立出來）
+│   ├── middleware-specs.md          ← MW1-MW6 完整規格（GEMINI.md §2 的詳版）
+│   └── permission-pipeline.md       ← 四階段權限管線詳細設計
+│
+├── exec-plans/                     ← 執行計畫（WHAT + WHEN）
+│   ├── Gravity_Anchor_v2_Implementation_Plan.md   ← 已有
+│   ├── Gravity_Anchor_v2_Construction_Plan.md     ← 已有
+│   └── tech-debt-tracker.md         ← 技術債追蹤（N9 掃描結果匯入）
+│
+├── product-specs/                  ← 產品規格（HOW）
+│   ├── sprint-contract-spec.md      ← Sprint Contract 完整規格
+│   ├── evaluator-protocol.md        ← N7 Evaluator 四維評分規格
+│   └── canary-token-spec.md         ← Canary Token 偵測規格
+│
+├── references/                     ← 參考文獻（研究報告歸檔）
+│   ├── OpenAI_Harness_Engineering_Original_Research_Report.md
+│   ├── Anthropic_Harness_Design_Long_Running_Apps_Research_Report.md
+│   ├── NXCode_Harness_Engineering_Complete_Guide_Research_Report.md
+│   ├── Harness_Engineering_Learning_Archive_Research_Report.md
+│   ├── Everything_Gemini_Code_Research_Report.md
+│   ├── AI_Custom_System_Prompt_Harness_Analysis_Report.md
+│   └── Claude_Code_Harness_Architecture_Analysis.md
+│
+├── generated/                      ← N9 自動產生的報告
+│   └── (由 check-harness-consistency 產出)
+│
+└── QUALITY_SCORE.md                ← Phase 4 壓測後的品質評分
+```
+
+### GEMINI.md §6 指向規則
+
+```
+§6 只寫指向指令，不寫內容：
+  「完整拓樸定義 → docs/Harness/design-docs/topology-N0-N9.md」
+  「MW1-MW6 詳細規格 → docs/Harness/design-docs/middleware-specs.md」
+  「品質評分 → docs/Harness/QUALITY_SCORE.md」
+這樣 GEMINI.md 永遠不會超過 120 行。
+```
+
+---
+
 ## 八、交付物清單
 
 | # | 交付物 | 路徑 | 說明 |
 |---|---|---|---|
 | D1 | **GEMINI.md v2.0** | `C:\Users\promy\.gemini\GEMINI.md` | 重構後的全域 Harness 入口 |
-| D2 | **N7 Evaluator Protocol** | `.agents/rules/` | N7 新增 Evaluator 行為定義 |
-| D3 | **N9 Entropy Guardian Rules** | 待定 | N9 全新角色定義 |
-| D4 | **Sprint Contract Template** | `.agent_comms/contracts/TEMPLATE.md` | N1→Generator 發包範本 |
-| D5 | **check-consistency script** | `scripts/check-harness-consistency.sh` | 7 層一致性檢查腳本 |
-| D6 | **Harness Audit Checklist** | `docs/harness_audit_checklist.md` | 模型更新壓測清單 |
+| D2 | **文件架構骨架** | `docs/Harness/` | 6 個子目錄 + README.md |
+| D3 | **N7 Evaluator Protocol** | `docs/Harness/product-specs/evaluator-protocol.md` | N7 四維評分規格 |
+| D4 | **N9 Entropy Guardian Rules** | `.agents/rules/entropy-guardian.md` | N9 全新角色定義 |
+| D5 | **Sprint Contract Spec** | `docs/Harness/product-specs/sprint-contract-spec.md` | 完整規格 + 範本 |
+| D6 | **check-consistency script** | `scripts/check-harness-consistency.ps1` | 7 層一致性檢查腳本 |
+| D7 | **Harness Audit Checklist** | `docs/Harness/exec-plans/harness_audit_checklist.md` | 模型更新壓測清單 |
+| D8 | **QUALITY_SCORE.md** | `docs/Harness/QUALITY_SCORE.md` | Phase 4 壓測結果 |
 
 ---
 
@@ -416,32 +474,39 @@ Gemini 模型更新時：
 
 ```
 Phase 1: 基礎層建立（~2h）                    ← 立即可執行
+├── docs/Harness/ 文件架構骨架建立 + README.md
+├── 研究報告移入 references/
 ├── GEMINI.md v2.0 撰寫（§0-§3 + §5-§6）
-├── 中介軟體 6 條精簡定義嵌入
+├── 中介軟體 6 條精簡定義嵌入 + Canary Token
 └── 四階段權限管線嵌入
 
-Phase 2: 評估層分離（~4h）
-├── N7 Evaluator Protocol 撰寫
+Phase 2: 評估層建立（~4h）
+├── N7 Evaluator Protocol 撰寫 → product-specs/evaluator-protocol.md
 ├── N7 hermes-agent.md 更新（移除 Generator 職責）
-├── Sprint Contract Template 建立
+├── Sprint Contract Spec → product-specs/sprint-contract-spec.md
+├── Canary Token Spec → product-specs/canary-token-spec.md
 └── .agent_comms/ 目錄結構建立
 
 Phase 3: 熵管理層（~4h）
 ├── N9 Entropy Guardian Rules 撰寫
-├── check-harness-consistency.sh 開發
-├── Harness Audit Checklist 撰寫
+├── check-harness-consistency.ps1 開發
+├── design-docs/ 填充（core-beliefs + topology + middleware-specs + permission-pipeline）
+├── exec-plans/harness_audit_checklist.md 撰寫
+├── exec-plans/tech-debt-tracker.md 建立
 └── 降落備忘錄自動化升級
 
 Phase 4: 壓力測試（~1 週）
 ├── F1/F2/F3 三大失控模式測試
 ├── Context Anxiety 測試（超長對話）
-└── 逐 MW 承重性測試
+├── 逐 MW 承重性測試
+└── QUALITY_SCORE.md 產出
 
 Phase 5: 全域擴展（~1 週）
 ├── N2-N5, N8 per-project rules 更新
 ├── N6 設計納入上下文壓縮管線
 ├── Guides/Sensors 平衡度量化
-└── Harness v2.0 正式發佈
+├── 文件架構完整性校驗（交叉引用檢查）
+└── Harness v2.0 正式發佈 + Release Notes
 ```
 
 ---
