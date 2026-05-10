@@ -1,5 +1,6 @@
 ---
 trigger: always_on
+harness_version: 2.0.10
 ---
 
 # Hermes Agent (N7) - 底層架構守護與重構中樞
