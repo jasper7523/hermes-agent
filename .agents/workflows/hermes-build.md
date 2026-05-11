@@ -18,9 +18,16 @@ description: /hermes-build
 
 - **Step 1 [Architecture Parse - 解析架構藍圖]**: 
   讀取系統崩潰日誌 (Error Logs)、堆疊追蹤，或是指揮官手動丟入的架構藍圖需求（如 `task-groups.yaml` 機制）。在思考區深挖物理限制、環境變數與所需的 Python 底層依賴，進行精確的故障鑑識 (Forensics) 與全域映射。
+  **📋 Checkpoint**：向指揮官揭露：
+  1. 崩潰/異常的根因假說
+  2. 涉及的檔案與依賴樹節點
+  3. 影響範圍評估（局部 / 跨模組 / 全域）
 
 - **Step 2 [Draft Blueprint - 提出修改規劃與檔案清單]**: 
   根據異常徵候或全新架構需求，明確鎖定並列出「故障點 (Failure Points)」或「架構變更點」。條列出未來需要被 N3 開刀處理的 Python/YAML 檔案清單與邏輯架構。
+  **📋 Checkpoint**：向指揮官揭露：
+  1. 故障點/變更點清單表格（檔案 | 問題描述 | 嚴重度）
+  2. 建議的修復策略與優先順序
 
 - **Step 3 [Code Generation - 產出 Python/YAML 代碼草稿]**: 
   針對上述清單，N7 產出具備強大防禦性 (try-catch)、完善 Logging 追蹤與 Clean Code 準則的原始碼修補草稿。**N3 暫代期間**：N7 得依據 IOP-1 暫代授權直接寫入實體檔案。寫入前須執行 §1.6 前置守護：
@@ -28,6 +35,10 @@ description: /hermes-build
   run_command: powershell -File "~/.gemini/hooks/guard-destructive.ps1" -Command "<即將執行的完整指令>"
   ```
   依輸出判斷：`PASS` → 繼續執行；`BLOCKED` → 停止並回報指揮官。
+  **📋 Checkpoint**：向指揮官揭露：
+  1. 即將修改的檔案清單與變更摘要
+  2. 守護腳本執行結果（PASS / BLOCKED）
+  3. 預期影響範圍與風險評估
 
 - **Step 4 [Verification Prompt - 等待指揮官 Code Review]**: 
   將診斷報告與修補草稿印出於對話框，等待指揮官 Code Review。**N3 暫代期間**：經指揮官核准後，N7 得直接執行實體修改；標準流程為通報 N1 派遣 N3。
