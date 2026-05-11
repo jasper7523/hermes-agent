@@ -25,7 +25,7 @@ description: /hermes-build
 
 - **Step 2 [Draft Blueprint - 提出修改規劃與檔案清單]**: 
   根據異常徵候或全新架構需求，明確鎖定並列出「故障點 (Failure Points)」或「架構變更點」。條列出未來需要被 N3 開刀處理的 Python/YAML 檔案清單與邏輯架構。
-  **📋 Checkpoint**：向指揮官揭露：
+  **🔒 Gate（修復方案確認）**：在對話框中印出以下資訊，然後停止執行並等待指揮官核准修復方案：
   1. 故障點/變更點清單表格（檔案 | 問題描述 | 嚴重度）
   2. 建議的修復策略與優先順序
 
@@ -35,7 +35,7 @@ description: /hermes-build
   run_command: powershell -File "~/.gemini/hooks/guard-destructive.ps1" -Command "<即將執行的完整指令>"
   ```
   依輸出判斷：`PASS` → 繼續執行；`BLOCKED` → 停止並回報指揮官。
-  **📋 Checkpoint**：向指揮官揭露：
+  **🔒 Gate（寫入前確認）**：在對話框中印出以下資訊，然後停止執行並等待指揮官確認後方可寫入：
   1. 即將修改的檔案清單與變更摘要
   2. 守護腳本執行結果（PASS / BLOCKED）
   3. 預期影響範圍與風險評估
