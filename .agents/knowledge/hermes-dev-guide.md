@@ -1,4 +1,4 @@
-﻿# Hermes Agent - Development Guide
+# Hermes Agent - Development Guide
 
 Instructions for AI coding assistants and developers working on the hermes-agent codebase.
 
@@ -591,6 +591,28 @@ Worker count above 4 will surface test-ordering flakes that CI never sees.
 
 Always run the full suite before pushing changes.
 
+
+## KI (Knowledge Item) 路徑規範
+
+> **[N0 缺陷修復]** appDataDir 注入的路徑（`C:\Users\promy\.gemini\antigravity`）與 KI 的實際儲存位置不一致。
+> 詳見：`docs/Harness/[N0_DEFICIENCY]_KI_Path_Resolution.md`
+
+### Canonical Path（唯一正確路徑）
+
+```
+C:\Users\promy\.gemini\knowledge\
+```
+
+所有 KI 的讀取與寫入**一律使用上述全域路徑**，禁止使用 `<appDataDir>\knowledge\`。
+
+### 規則
+
+1. **讀取 KI**：直接查找 `C:\Users\promy\.gemini\knowledge\<ki-name>\metadata.json`
+2. **建立 KI**：寫入 `C:\Users\promy\.gemini\knowledge\<ki-name>\`，包含 `metadata.json` + `artifacts/`
+3. **禁止寫入**：`C:\Users\promy\.gemini\antigravity\knowledge\`（引擎內部路徑，非 canonical）
+4. **Conversation logs / artifacts**：仍使用 `<appDataDir>\brain\<conversation-id>\`（不受此規範影響）
+
+---
 
 ## 🛑 【最高產出禁令】
 所有 N7 與 N1 調度 GStack/GSD 產出的內容，必須符合繁體中文法遵與技術在地化標準。
