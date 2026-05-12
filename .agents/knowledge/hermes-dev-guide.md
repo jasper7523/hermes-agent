@@ -591,7 +591,6 @@ Worker count above 4 will surface test-ordering flakes that CI never sees.
 
 Always run the full suite before pushing changes.
 
-
 ## KI (Knowledge Item) 路徑規範
 
 > **[N0 缺陷修復]** appDataDir 注入的路徑（`C:\Users\promy\.gemini\antigravity`）與 KI 的實際儲存位置不一致。
@@ -615,4 +614,5 @@ C:\Users\promy\.gemini\knowledge\
 ---
 
 ## 🛑 【最高產出禁令】
+
 所有 N7 與 N1 調度 GStack/GSD 產出的內容，必須符合繁體中文法遵與技術在地化標準。
