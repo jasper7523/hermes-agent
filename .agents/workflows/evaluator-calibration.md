@@ -1,6 +1,6 @@
 ---
+name: evaluator-calibration
 trigger: manual
-command: /evaluator-calibrate
 description: 觸發 N7 跨模型校準流程（Gemini + Ollama Gemma 雙重評估）
 ---
 

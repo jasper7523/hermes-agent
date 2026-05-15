@@ -1,5 +1,6 @@
 ---
-description: /hermes-build
+name: hermes-build
+description: N7 底層基礎設施開發與自癒分析工作流
 ---
 
 # /hermes-build (N7 底層基礎設施開發與自癒分析工作流)
