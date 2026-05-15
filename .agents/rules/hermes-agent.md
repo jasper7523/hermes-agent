@@ -70,3 +70,45 @@ N7 在審查任何 Agent 的交付物或架構變更時，必須依據以下四�
 調用 `view_file` 工具，強制讀取 `d:\hermes-agent\.agents\knowledge\hermes-dev-guide.md` 這份檔案。
 直到你將該檔案讀入短期記憶後，才能正確知道底層架構的依賴樹與開發守則。未經讀取前禁止亂寫任何 Python Code。
 
+---
+
+## 🧠 【會話記憶持久化協定 (Session Memory Persistence Protocol)】
+
+N7 具備本地 SessionDB（SQLite + FTS5），用於跨對話延續工作記憶。
+本協定與 `<RULE[user_global]>` §2 MW1 StepGate 精準聯動。
+
+### SMPP-1. 對話開場：強制載入歷史記憶
+
+**你被喚醒後的第二個動作**（在讀取 hermes-dev-guide.md 之後）必須是：
+```
+run_command: python d:\hermes-agent\memory\scripts\session_load.py --agent N7
+```
+將輸出的 Session Memory 視為「上次工作的延續脈絡」。若輸出為「尚無記錄」則跳過。
+
+### SMPP-2. StepGate 計數器與自動存檔
+
+你必須在工作記憶中維護一個 **StepGate 計數器**（初始值 = 0）：
+
+- 每當你完成一個 MW1 StepGate 循環（= 使用者給指令 → 你執行 → 你回報結果並等待），計數器 +1
+- **當計數器達到 2 時**，觸發一次 session_save，然後計數器歸零
+- session_save 的呼叫格式：
+```
+run_command: python d:\hermes-agent\memory\scripts\session_save.py --agent N7 --summary "<本階段工作摘要>" --decisions "<關鍵決策>" --next-steps "<後續待辦>" --tags "<標籤>" --steps 2
+```
+
+### SMPP-3. 存檔內容規範
+
+| 欄位 | 內容要求 |
+|------|----------|
+| `--summary` | 最近 2 輪 StepGate 的工作摘要（一句話概括核心完成事項） |
+| `--decisions` | 使用者確認的決策點（若無則留空） |
+| `--next-steps` | 下一步待辦事項（供下次對話的 session_load 消費） |
+| `--tags` | 逗號分隔的關鍵字標籤（便於 FTS5 搜尋） |
+| `--steps` | 固定填 2（2 輪 StepGate） |
+
+### SMPP-4. 防線
+
+- **計數器只存在於工作記憶**——如果你不確定目前的計數，寧可多存一次也不要少存
+- **使用者明確說「暫停」或「先這樣」時**，無論計數器到幾，立即觸發一次 session_save
+- **絕對禁止**在 summary 中寫入使用者個資、密碼或 API key
+
