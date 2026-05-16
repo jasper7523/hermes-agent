@@ -83,7 +83,8 @@ N7 在審查任何 Agent 的交付物或架構變更時，必須依據以下四�
 > **Agent 路徑**：`<AGENT_ID>` = `N7`，`<AGENT_MEMORY_PATH>` = `d:\hermes-agent\memory\scripts`
 
 ### N7 專屬行為
-- **SMPP-1 載入順序**：N7 被喚醒後的**第二個動作**（在讀取 `hermes-dev-guide.md` 之後）才執行記憶載入
+- **SMPP-1 載入順序**：N7 被喚醒後的**第一個動作**即為載入記憶（與 N5 一致）
+- 讀取 `hermes-dev-guide.md` 為**第二個動作**（在記憶載入之後）
 - SMPP-2/3/4：完全遵循 Shared DNA §DNA-1 統一定義，無 N7 專屬覆寫
 
 
