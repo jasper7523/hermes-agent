@@ -52,6 +52,127 @@ d:\hermes-agent\tests\n6\
 
 ---
 
+## 執行模式比較
+
+本計畫提供兩種執行方式，核心差異在於**上下文管理**與**品質閘門機制**：
+
+### 模式 A：Subagent 驅動（推薦）
+
+**技能：** `superpowers:subagent-driven-development`
+
+**運作原理：** 主控 Agent（你的當前 session）作為調度中心，每個 Task 派發一個**全新的** subagent 去執行。subagent 完成後，主控 Agent 再派發兩個 reviewer subagent 進行雙階段審查。
+
+```
+主控 Agent (N7)
+  ├── 派發 Implementer Subagent → 執行 Task 1
+  │     └── 完成 → 回報 DONE
+  ├── 派發 Spec Reviewer Subagent → 驗證是否符合規格
+  │     └── ✅ PASS
+  ├── 派發 Code Quality Reviewer → 驗證程式碼品質
+  │     └── ✅ PASS → 標記 Task 1 完成
+  ├── 派發 Implementer Subagent → 執行 Task 2
+  │     └── ...（重複）
+  └── 全部完成 → 派發 Final Reviewer → finishing-a-development-branch
+```
+
+**優點：**
+- ✅ 每個 Task 擁有**乾淨的上下文**，不會被前面的 Task 殘留資訊污染
+- ✅ **雙階段品質閘門**：先驗規格符合性、再驗程式碼品質
+- ✅ 主控 Agent 保留全域視野，可在 Task 之間做決策調整
+- ✅ 支援 `NEEDS_CONTEXT` / `BLOCKED` 狀態回報，遇到問題會停下來詢問
+
+**缺點：**
+- ⚠️ 每個 Task 需要 3+ 次 subagent 調用（Implementer + 2 Reviewers）
+- ⚠️ 主控 Agent 需要手動提供上下文給每個 subagent
+
+**適用場景：** Task 之間相對獨立、需要高品質保證、session 時間充足
+
+---
+
+### 模式 B：內聯執行
+
+**技能：** `superpowers:executing-plans`
+
+**運作原理：** 在**同一個 session** 中，Agent 直接按照計畫逐步執行每個 Task 的每個 Step。沒有 subagent 分派，所有工作在當前上下文中完成。
+
+```
+當前 Session (N7)
+  ├── 讀取計畫 → 批判性審查 → 建立 Todo 清單
+  ├── 執行 Task 1 Step 1-8 → 標記完成
+  ├── 執行 Task 2 Step 1-8 → 標記完成
+  ├── ...
+  └── 全部完成 → finishing-a-development-branch
+```
+
+**優點：**
+- ✅ 無 subagent 開銷，**執行速度更快**
+- ✅ 所有 Task 共享上下文，跨 Task 的依賴關係處理更簡單
+- ✅ 適合快速原型開發
+
+**缺點：**
+- ⚠️ **無雙階段審查**，品質保證依賴 Agent 自身的自檢能力
+- ⚠️ 長計畫可能導致上下文窗口溢出，後期 Task 品質下降
+- ⚠️ 一旦中途出錯，可能汙染後續所有 Task 的執行
+
+**適用場景：** 計畫較短（≤5 Tasks）、快速迭代、不需要嚴格的審查流程
+
+---
+
+### 建議選擇
+
+| 條件 | 推薦模式 |
+|------|---------|
+| 本計畫（11 Tasks，高複雜度） | **模式 A：Subagent 驅動** |
+| 快速修補（1-3 Tasks） | 模式 B：內聯執行 |
+| 需要嚴格品質閘門 | 模式 A |
+| 上下文窗口有限 | 模式 A |
+| 需要跨 Task 快速共享狀態 | 模式 B |
+
+---
+
+## 施工所需技能清單
+
+以下列出本計畫施工過程中**必須**或**建議**載入的 Skills，按階段分類：
+
+### 🔧 核心施工技能（必須）
+
+| 技能 | 路徑 | 用途 | 使用時機 |
+|------|------|------|---------|
+| **subagent-driven-development** | `superpowers/subagent-driven-development/SKILL.md` | 主控調度：派發 Implementer + Reviewer subagents | 模式 A 全程使用 |
+| **executing-plans** | `superpowers/executing-plans/SKILL.md` | 內聯執行：逐步實作計畫 | 模式 B 全程使用 |
+| **test-driven-development** | `superpowers/test-driven-development/SKILL.md` | TDD 循環：紅→綠→重構 | 每個 Task 的 Step 1-4 |
+| **using-git-worktrees** | `superpowers/using-git-worktrees/SKILL.md` | Git worktree 隔離：建立獨立工作分支 | 施工開始前 |
+
+### 🔍 品質保證技能（強烈建議）
+
+| 技能 | 路徑 | 用途 | 使用時機 |
+|------|------|------|---------|
+| **requesting-code-review** | `superpowers/requesting-code-review/SKILL.md` | 向 reviewer subagent 提交審查請求 | 模式 A 每個 Task 完成後 |
+| **receiving-code-review** | `superpowers/receiving-code-review/SKILL.md` | 處理 reviewer 回饋 | 審查未通過時 |
+| **verification-before-completion** | `superpowers/verification-before-completion/SKILL.md` | 完工前最終驗證 | Task 11 完成後 |
+| **systematic-debugging** | `superpowers/systematic-debugging/SKILL.md` | 系統性除錯流程 | 測試失敗且原因不明時 |
+
+### 🚀 收尾技能（必須）
+
+| 技能 | 路徑 | 用途 | 使用時機 |
+|------|------|------|---------|
+| **finishing-a-development-branch** | `superpowers/finishing-a-development-branch/SKILL.md` | 分支收尾：最終測試 + 合併準備 | 全部 11 Tasks 完成後 |
+
+### 📋 施工流程摘要
+
+```
+1. 載入 using-git-worktrees → 建立隔離工作分支
+2. 選擇模式 A 或 B → 載入對應技能
+3. 逐 Task 執行：
+   ├── 每個 Task 內使用 test-driven-development
+   ├── 模式 A：每個 Task 後觸發 requesting-code-review
+   └── 遇到卡關：載入 systematic-debugging
+4. Task 11 完成後 → verification-before-completion
+5. 最終收尾 → finishing-a-development-branch
+```
+
+---
+
 ## Task 1：專案骨架 + MCP Server 啟動
 
 **檔案：**
