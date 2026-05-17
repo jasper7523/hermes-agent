@@ -15,7 +15,7 @@
 ## File Structure
 
 ```
-d:\hermes-agent\src\n6_memory_broker\
+D:\Agent_Hub\agents\Mem_Agent\src\n6_memory_broker\
 ├── __init__.py              # Package init + version
 ├── server.py                # MCP Server entry point + tool registration
 ├── schema.py                # SQLite schema init, migrations, FTS5
@@ -29,13 +29,13 @@ d:\hermes-agent\src\n6_memory_broker\
 ├── inspector.py             # 2-hour periodic inspection daemon
 └── config.py                # Environment config + constants
 
-d:\hermes-agent\src\n6_memory_broker\tools\
+D:\Agent_Hub\agents\Mem_Agent\src\n6_memory_broker\tools\
 ├── __init__.py
 ├── write_tools.py           # memory_submit, memory_update
 ├── read_tools.py            # memory_search, memory_load_recent, memory_browse_*
 └── admin_tools.py           # memory_stats, memory_archive_status
 
-d:\hermes-agent\tests\n6\
+D:\Agent_Hub\agents\Mem_Agent\tests\n6\
 ├── conftest.py              # Shared fixtures (temp DB, mock ACL)
 ├── test_schema.py           # Schema creation + migration
 ├── test_models.py           # Pydantic validation
@@ -48,6 +48,127 @@ d:\hermes-agent\tests\n6\
 ├── test_decay.py            # Tier promotion + archival
 ├── test_markdown_sync.py    # Markdown ↔ DB sync
 └── test_legacy_migrator.py  # Legacy migration
+```
+
+---
+
+## Execution Modes Comparison
+
+This plan supports two execution modes. The core difference is **context management** and **quality gate mechanism**:
+
+### Mode A: Subagent-Driven (Recommended)
+
+**Skill:** `superpowers:subagent-driven-development`
+
+**How it works:** The controller Agent (your current session) acts as dispatcher. Each Task gets a **fresh** subagent for implementation, followed by two reviewer subagents for two-stage review.
+
+```
+Controller Agent (N7)
+  ├── Dispatch Implementer Subagent → Execute Task 1
+  │     └── Done → Report DONE
+  ├── Dispatch Spec Reviewer Subagent → Verify spec compliance
+  │     └── ✅ PASS
+  ├── Dispatch Code Quality Reviewer → Verify code quality
+  │     └── ✅ PASS → Mark Task 1 complete
+  ├── Dispatch Implementer Subagent → Execute Task 2
+  │     └── ...(repeat)
+  └── All done → Final Reviewer → finishing-a-development-branch
+```
+
+**Pros:**
+- ✅ Each Task gets a **clean context**, no pollution from prior Tasks
+- ✅ **Two-stage quality gates**: spec compliance first, then code quality
+- ✅ Controller retains global view for inter-Task decision adjustments
+- ✅ Supports `NEEDS_CONTEXT` / `BLOCKED` status reporting
+
+**Cons:**
+- ⚠️ Each Task requires 3+ subagent invocations (Implementer + 2 Reviewers)
+- ⚠️ Controller must manually craft context for each subagent
+
+**Best for:** Independent Tasks, high quality requirements, sufficient session time
+
+---
+
+### Mode B: Inline Execution
+
+**Skill:** `superpowers:executing-plans`
+
+**How it works:** Execute all Tasks step-by-step in the **same session**. No subagent dispatch; all work happens in the current context.
+
+```
+Current Session (N7)
+  ├── Read plan → Critical review → Create Todo list
+  ├── Execute Task 1 Steps 1-8 → Mark complete
+  ├── Execute Task 2 Steps 1-8 → Mark complete
+  ├── ...
+  └── All done → finishing-a-development-branch
+```
+
+**Pros:**
+- ✅ No subagent overhead, **faster execution**
+- ✅ All Tasks share context, easier cross-Task dependency handling
+- ✅ Good for rapid prototyping
+
+**Cons:**
+- ⚠️ **No two-stage review**, quality depends on Agent self-checking
+- ⚠️ Long plans may exhaust context window, degrading later Tasks
+- ⚠️ Mid-execution errors may pollute all subsequent Tasks
+
+**Best for:** Short plans (≤5 Tasks), rapid iteration, no strict review needed
+
+---
+
+### Recommended Choice
+
+| Condition | Recommended Mode |
+|-----------|-----------------|
+| This plan (11 Tasks, high complexity) | **Mode A: Subagent-Driven** |
+| Quick fixes (1-3 Tasks) | Mode B: Inline Execution |
+| Strict quality gates required | Mode A |
+| Limited context window | Mode A |
+| Need fast cross-Task state sharing | Mode B |
+
+---
+
+## Required Skills Inventory
+
+Skills **required** or **recommended** during construction, organized by phase:
+
+### 🔧 Core Construction (Required)
+
+| Skill | Path | Purpose | When |
+|-------|------|---------|------|
+| **subagent-driven-development** | `superpowers/subagent-driven-development/SKILL.md` | Controller dispatch: Implementer + Reviewer subagents | Mode A throughout |
+| **executing-plans** | `superpowers/executing-plans/SKILL.md` | Inline execution: step-by-step plan execution | Mode B throughout |
+| **test-driven-development** | `superpowers/test-driven-development/SKILL.md` | TDD cycle: Red→Green→Refactor | Every Task Steps 1-4 |
+| **using-git-worktrees** | `superpowers/using-git-worktrees/SKILL.md` | Git worktree isolation: create feature branch | Before construction |
+
+### 🔍 Quality Assurance (Strongly Recommended)
+
+| Skill | Path | Purpose | When |
+|-------|------|---------|------|
+| **requesting-code-review** | `superpowers/requesting-code-review/SKILL.md` | Submit review requests to reviewer subagent | Mode A after each Task |
+| **receiving-code-review** | `superpowers/receiving-code-review/SKILL.md` | Handle reviewer feedback | When review fails |
+| **verification-before-completion** | `superpowers/verification-before-completion/SKILL.md` | Final pre-completion verification | After Task 11 |
+| **systematic-debugging** | `superpowers/systematic-debugging/SKILL.md` | Systematic debugging process | When tests fail unexpectedly |
+
+### 🚀 Finalization (Required)
+
+| Skill | Path | Purpose | When |
+|-------|------|---------|------|
+| **finishing-a-development-branch** | `superpowers/finishing-a-development-branch/SKILL.md` | Branch finalization: final tests + merge prep | After all 11 Tasks |
+
+### 📋 Construction Flow Summary
+
+```
+1. Load using-git-worktrees → Create isolated feature branch
+2. Choose Mode A or B → Load corresponding skill
+3. Execute Tasks sequentially:
+   ├── Each Task uses test-driven-development
+   ├── Mode A: trigger requesting-code-review after each Task
+   └── If blocked: load systematic-debugging
+4. After Task 11 → verification-before-completion
+5. Final → finishing-a-development-branch
 ```
 
 ---
@@ -150,7 +271,7 @@ def general_caller():
 
 - [ ] **Step 5: Run test to verify it fails**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_server_boot.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_boot.py -v`
 Expected: FAIL with `ModuleNotFoundError`
 
 - [ ] **Step 6: Implement minimal MCP server**
@@ -177,13 +298,13 @@ if __name__ == "__main__":
 
 - [ ] **Step 7: Run test to verify it passes**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_server_boot.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_boot.py -v`
 Expected: PASS
 
 - [ ] **Step 8: Commit**
 
 ```bash
-cd d:\hermes-agent
+cd D:\Agent_Hub\agents\Mem_Agent
 git add src/n6_memory_broker/ tests/n6/
 git commit -m "feat(n6): bootstrap MCP server skeleton + config + test fixtures"
 ```
@@ -247,7 +368,7 @@ def test_idempotent_init(tmp_path):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_schema.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement schema module**
@@ -317,7 +438,7 @@ def init_db(db_path: Path) -> sqlite3.Connection:
 
 - [ ] **Step 4: Run schema tests**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_schema.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Write failing model tests**
@@ -395,7 +516,7 @@ class SearchResult(BaseModel):
 
 - [ ] **Step 7: Run all Task 2 tests**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_schema.py tests/n6/test_models.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py tests/n6/test_models.py -v`
 Expected: PASS
 
 - [ ] **Step 8: Commit**
@@ -455,7 +576,7 @@ def test_general_cannot_manage():
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_acl.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_acl.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement ACL**
@@ -498,7 +619,7 @@ def check_permission(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_acl.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_acl.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -567,7 +688,7 @@ def test_list_by_namespace(tmp_db):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_store.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_store.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement store module**
@@ -690,7 +811,7 @@ def _parse_row(row: sqlite3.Row) -> dict:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_store.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_store.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -749,7 +870,7 @@ def test_memory_update_acl_blocked(tmp_db):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_write_tools.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_write_tools.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement write tools**
@@ -816,7 +937,7 @@ def handle_memory_update(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_write_tools.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_write_tools.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -886,7 +1007,7 @@ def test_browse_project(seeded_db):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_read_tools.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_read_tools.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement read tools**
@@ -962,7 +1083,7 @@ def handle_memory_browse_project(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_read_tools.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_read_tools.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -1019,7 +1140,7 @@ def test_archive_status_general_blocked(seeded_db):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_admin_tools.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_admin_tools.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement admin tools**
@@ -1094,7 +1215,7 @@ def handle_memory_archive_status(conn: sqlite3.Connection, agent_id: str) -> dic
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_admin_tools.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_admin_tools.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -1147,7 +1268,7 @@ def test_semantic_search_falls_back_to_fts(tmp_db):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_embedding.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_embedding.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement embedding module**
@@ -1235,7 +1356,7 @@ def semantic_search(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_embedding.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_embedding.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -1313,7 +1434,7 @@ def test_archive_moves_to_archive_table(tmp_db):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_decay.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_decay.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement decay engine**
@@ -1418,7 +1539,7 @@ def archive_memories(conn: sqlite3.Connection, memory_ids: list[int]) -> int:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_decay.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_decay.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -1479,7 +1600,7 @@ def test_migrate_file_idempotent(tmp_db, tmp_path):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
 Expected: FAIL
 
 - [ ] **Step 3: Implement migrator**
@@ -1555,7 +1676,7 @@ def run_full_migration(conn: sqlite3.Connection, legacy_root: Path) -> dict:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -1599,7 +1720,7 @@ def test_server_tool_count():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_server_integration.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_integration.py -v`
 Expected: FAIL (tools not registered yet)
 
 - [ ] **Step 3: Register all tools on the server**
@@ -1690,12 +1811,12 @@ if __name__ == "__main__":
 
 - [ ] **Step 4: Run integration test**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/test_server_integration.py -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_integration.py -v`
 Expected: PASS
 
 - [ ] **Step 5: Run full test suite**
 
-Run: `cd d:\hermes-agent && python -m pytest tests/n6/ -v`
+Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/ -v`
 Expected: ALL PASS
 
 - [ ] **Step 6: Commit**

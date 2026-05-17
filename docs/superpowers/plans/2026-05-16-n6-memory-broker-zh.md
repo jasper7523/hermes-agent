@@ -15,7 +15,7 @@
 ## 檔案結構
 
 ```
-d:\hermes-agent\src\n6_memory_broker\
+D:\Agent_Hub\agents\Mem_Agent\src\n6_memory_broker\
 ├── __init__.py              # Package init + version
 ├── server.py                # MCP Server entry point + tool registration
 ├── schema.py                # SQLite schema init, migrations, FTS5
@@ -29,13 +29,13 @@ d:\hermes-agent\src\n6_memory_broker\
 ├── inspector.py             # 2-hour periodic inspection daemon
 └── config.py                # Environment config + constants
 
-d:\hermes-agent\src\n6_memory_broker\tools\
+D:\Agent_Hub\agents\Mem_Agent\src\n6_memory_broker\tools\
 ├── __init__.py
 ├── write_tools.py           # memory_submit, memory_update
 ├── read_tools.py            # memory_search, memory_load_recent, memory_browse_*
 └── admin_tools.py           # memory_stats, memory_archive_status
 
-d:\hermes-agent\tests\n6\
+D:\Agent_Hub\agents\Mem_Agent\tests\n6\
 ├── conftest.py              # Shared fixtures (temp DB, mock ACL)
 ├── test_schema.py           # Schema creation + migration
 ├── test_models.py           # Pydantic validation
@@ -271,7 +271,7 @@ def general_caller():
 
 - [ ] **步驟 5：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_server_boot.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_boot.py -v`
 預期：FAIL，錯誤為 `ModuleNotFoundError`
 
 - [ ] **步驟 6：實作最小 MCP Server**
@@ -298,13 +298,13 @@ if __name__ == "__main__":
 
 - [ ] **步驟 7：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_server_boot.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_boot.py -v`
 預期：PASS
 
 - [ ] **步驟 8：提交**
 
 ```bash
-cd d:\hermes-agent
+cd D:\Agent_Hub\agents\Mem_Agent
 git add src/n6_memory_broker/ tests/n6/
 git commit -m "feat(n6): bootstrap MCP server skeleton + config + test fixtures"
 ```
@@ -368,7 +368,7 @@ def test_idempotent_init(tmp_path):
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_schema.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作 Schema 模組**
@@ -438,7 +438,7 @@ def init_db(db_path: Path) -> sqlite3.Connection:
 
 - [ ] **步驟 4：執行 Schema 測試**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_schema.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py -v`
 預期：PASS
 
 - [ ] **步驟 5：撰寫預期失敗的模型測試**
@@ -516,7 +516,7 @@ class SearchResult(BaseModel):
 
 - [ ] **步驟 7：執行所有 Task 2 測試**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_schema.py tests/n6/test_models.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py tests/n6/test_models.py -v`
 預期：PASS
 
 - [ ] **步驟 8：提交**
@@ -576,7 +576,7 @@ def test_general_cannot_manage():
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_acl.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_acl.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作 ACL**
@@ -619,7 +619,7 @@ def check_permission(
 
 - [ ] **步驟 4：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_acl.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_acl.py -v`
 預期：PASS
 
 - [ ] **步驟 5：提交**
@@ -688,7 +688,7 @@ def test_list_by_namespace(tmp_db):
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_store.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_store.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作 Store 模組**
@@ -811,7 +811,7 @@ def _parse_row(row: sqlite3.Row) -> dict:
 
 - [ ] **步驟 4：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_store.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_store.py -v`
 預期：PASS
 
 - [ ] **步驟 5：提交**
@@ -870,7 +870,7 @@ def test_memory_update_acl_blocked(tmp_db):
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_write_tools.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_write_tools.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作寫入工具**
@@ -937,7 +937,7 @@ def handle_memory_update(
 
 - [ ] **步驟 4：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_write_tools.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_write_tools.py -v`
 預期：PASS
 
 - [ ] **步驟 5：提交**
@@ -1007,7 +1007,7 @@ def test_browse_project(seeded_db):
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_read_tools.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_read_tools.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作讀取工具**
@@ -1083,7 +1083,7 @@ def handle_memory_browse_project(
 
 - [ ] **步驟 4：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_read_tools.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_read_tools.py -v`
 預期：PASS
 
 - [ ] **步驟 5：提交**
@@ -1140,7 +1140,7 @@ def test_archive_status_general_blocked(seeded_db):
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_admin_tools.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_admin_tools.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作管理工具**
@@ -1215,7 +1215,7 @@ def handle_memory_archive_status(conn: sqlite3.Connection, agent_id: str) -> dic
 
 - [ ] **步驟 4：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_admin_tools.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_admin_tools.py -v`
 預期：PASS
 
 - [ ] **步驟 5：提交**
@@ -1268,7 +1268,7 @@ def test_semantic_search_falls_back_to_fts(tmp_db):
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_embedding.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_embedding.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作嵌入向量模組**
@@ -1356,7 +1356,7 @@ def semantic_search(
 
 - [ ] **步驟 4：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_embedding.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_embedding.py -v`
 預期：PASS
 
 - [ ] **步驟 5：提交**
@@ -1434,7 +1434,7 @@ def test_archive_moves_to_archive_table(tmp_db):
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_decay.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_decay.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作衰減引擎**
@@ -1539,7 +1539,7 @@ def archive_memories(conn: sqlite3.Connection, memory_ids: list[int]) -> int:
 
 - [ ] **步驟 4：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_decay.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_decay.py -v`
 預期：PASS
 
 - [ ] **步驟 5：提交**
@@ -1600,7 +1600,7 @@ def test_migrate_file_idempotent(tmp_db, tmp_path):
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
 預期：FAIL
 
 - [ ] **步驟 3：實作遷移器**
@@ -1676,7 +1676,7 @@ def run_full_migration(conn: sqlite3.Connection, legacy_root: Path) -> dict:
 
 - [ ] **步驟 4：執行測試確認通過**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
 預期：PASS
 
 - [ ] **步驟 5：提交**
@@ -1720,7 +1720,7 @@ def test_server_tool_count():
 
 - [ ] **步驟 2：執行測試確認失敗**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_server_integration.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_integration.py -v`
 預期：FAIL（工具尚未註冊）
 
 - [ ] **步驟 3：在 Server 上註冊所有工具**
@@ -1811,12 +1811,12 @@ if __name__ == "__main__":
 
 - [ ] **步驟 4：執行整合測試**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/test_server_integration.py -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_integration.py -v`
 預期：PASS
 
 - [ ] **步驟 5：執行全部測試套件**
 
-執行：`cd d:\hermes-agent && python -m pytest tests/n6/ -v`
+執行：`cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/ -v`
 預期：全部 PASS
 
 - [ ] **步驟 6：提交**
