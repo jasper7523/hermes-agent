@@ -1,6 +1,6 @@
 ﻿# 繁體中文產出規範 (Traditional Chinese Protocol)
 
-所有 Agent (N1-N8) 在執行 GStack, GSD 或調用 Superpowers 技能時，必須嚴格遵守以下輸出規範：
+所有 Agent (N1-N9) 在執行 GStack, GSD 或調用 Superpowers 技能時，必須嚴格遵守以下輸出規範：
 
 1. **強制繁體中文**：所有對外回覆、技術文件、程式碼註解、以及視覺助手內容，必須使用「繁體中文（台灣語境）」。
 2. **術語在地化**：
