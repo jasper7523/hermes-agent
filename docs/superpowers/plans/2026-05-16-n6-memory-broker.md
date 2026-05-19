@@ -33,7 +33,7 @@ D:\Agent_Hub\agents\Mem_Agent\src\n6_memory_broker\tools\
 ├── __init__.py
 ├── write_tools.py           # memory_submit, memory_update
 ├── read_tools.py            # memory_search, memory_load_recent, memory_browse_*
-└── admin_tools.py           # memory_stats, memory_archive_status
+└── admin_tools.py           # memory_compact, memory_health
 
 D:\Agent_Hub\agents\Mem_Agent\tests\n6\
 ├── conftest.py              # Shared fixtures (temp DB, mock ACL)
@@ -182,7 +182,7 @@ Skills **required** or **recommended** during construction, organized by phase:
 - Create: `tests/n6/conftest.py`
 - Create: `tests/n6/test_server_boot.py`
 
-- [ ] **Step 1: Create package init**
+- [x] **Step 1: Create package init**
 
 ```python
 # src/n6_memory_broker/__init__.py
@@ -190,7 +190,7 @@ Skills **required** or **recommended** during construction, organized by phase:
 __version__ = "0.1.0"
 ```
 
-- [ ] **Step 2: Create config module**
+- [x] **Step 2: Create config module**
 
 ```python
 # src/n6_memory_broker/config.py
@@ -219,7 +219,7 @@ MCP_SERVER_NAME = "n6-memory-broker"
 MCP_SERVER_VERSION = "0.1.0"
 ```
 
-- [ ] **Step 3: Write the failing boot test**
+- [x] **Step 3: Write the failing boot test**
 
 ```python
 # tests/n6/test_server_boot.py
@@ -232,7 +232,7 @@ def test_create_server_returns_mcp_instance():
     assert server.name == "n6-memory-broker"
 ```
 
-- [ ] **Step 4: Create shared test fixtures**
+- [x] **Step 4: Create shared test fixtures**
 
 ```python
 # tests/n6/conftest.py
@@ -269,12 +269,12 @@ def general_caller():
     return CallerIdentity(agent_id="N5")
 ```
 
-- [ ] **Step 5: Run test to verify it fails**
+- [x] **Step 5: Run test to verify it fails**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_boot.py -v`
 Expected: FAIL with `ModuleNotFoundError`
 
-- [ ] **Step 6: Implement minimal MCP server**
+- [x] **Step 6: Implement minimal MCP server**
 
 ```python
 # src/n6_memory_broker/server.py
@@ -296,12 +296,12 @@ if __name__ == "__main__":
     server.run(transport="stdio")
 ```
 
-- [ ] **Step 7: Run test to verify it passes**
+- [x] **Step 7: Run test to verify it passes**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_boot.py -v`
 Expected: PASS
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 cd D:\Agent_Hub\agents\Mem_Agent
@@ -319,7 +319,7 @@ git commit -m "feat(n6): bootstrap MCP server skeleton + config + test fixtures"
 - Create: `tests/n6/test_schema.py`
 - Create: `tests/n6/test_models.py`
 
-- [ ] **Step 1: Write failing schema tests**
+- [x] **Step 1: Write failing schema tests**
 
 ```python
 # tests/n6/test_schema.py
@@ -366,12 +366,12 @@ def test_idempotent_init(tmp_path):
     conn2.close()
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement schema module**
+- [x] **Step 3: Implement schema module**
 
 ```python
 # src/n6_memory_broker/schema.py
@@ -436,12 +436,12 @@ def init_db(db_path: Path) -> sqlite3.Connection:
     return conn
 ```
 
-- [ ] **Step 4: Run schema tests**
+- [x] **Step 4: Run schema tests**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Write failing model tests**
+- [x] **Step 5: Write failing model tests**
 
 ```python
 # tests/n6/test_models.py
@@ -469,7 +469,7 @@ def test_caller_identity_general():
     assert caller.role == "general"
 ```
 
-- [ ] **Step 6: Implement models**
+- [x] **Step 6: Implement models**
 
 ```python
 # src/n6_memory_broker/models.py
@@ -514,12 +514,12 @@ class SearchResult(BaseModel):
     created_at: str = ""
 ```
 
-- [ ] **Step 7: Run all Task 2 tests**
+- [x] **Step 7: Run all Task 2 tests**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_schema.py tests/n6/test_models.py -v`
 Expected: PASS
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/n6_memory_broker/schema.py src/n6_memory_broker/models.py tests/n6/
@@ -534,7 +534,7 @@ git commit -m "feat(n6): SQLite schema with FTS5 + Pydantic models"
 - Create: `src/n6_memory_broker/acl.py`
 - Create: `tests/n6/test_acl.py`
 
-- [ ] **Step 1: Write failing ACL tests**
+- [x] **Step 1: Write failing ACL tests**
 
 ```python
 # tests/n6/test_acl.py
@@ -574,12 +574,12 @@ def test_general_cannot_manage():
         check_permission(caller, "manage")
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_acl.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement ACL**
+- [x] **Step 3: Implement ACL**
 
 ```python
 # src/n6_memory_broker/acl.py
@@ -617,12 +617,12 @@ def check_permission(
     raise ACLError(f"Unknown action: {action}")
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_acl.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/n6_memory_broker/acl.py tests/n6/test_acl.py
@@ -637,7 +637,7 @@ git commit -m "feat(n6): ACL layer — admin/general role enforcement"
 - Create: `src/n6_memory_broker/store.py`
 - Create: `tests/n6/test_store.py`
 
-- [ ] **Step 1: Write failing store tests**
+- [x] **Step 1: Write failing store tests**
 
 ```python
 # tests/n6/test_store.py
@@ -686,12 +686,12 @@ def test_list_by_namespace(tmp_db):
     assert len(rows) == 2
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_store.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement store module**
+- [x] **Step 3: Implement store module**
 
 ```python
 # src/n6_memory_broker/store.py
@@ -809,12 +809,12 @@ def _parse_row(row: sqlite3.Row) -> dict:
     return d
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_store.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/n6_memory_broker/store.py tests/n6/test_store.py
@@ -830,7 +830,7 @@ git commit -m "feat(n6): core store CRUD with FTS5 search"
 - Create: `src/n6_memory_broker/tools/write_tools.py`
 - Create: `tests/n6/test_write_tools.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/n6/test_write_tools.py
@@ -868,12 +868,12 @@ def test_memory_update_acl_blocked(tmp_db):
     assert "forbidden" in result["message"].lower()
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_write_tools.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement write tools**
+- [x] **Step 3: Implement write tools**
 
 ```python
 # src/n6_memory_broker/tools/__init__.py
@@ -935,12 +935,12 @@ def handle_memory_update(
     return {"status": "ok", "memory_id": memory_id}
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_write_tools.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/n6_memory_broker/tools/ tests/n6/test_write_tools.py
@@ -955,7 +955,7 @@ git commit -m "feat(n6): MCP write tools — memory_submit + memory_update"
 - Create: `src/n6_memory_broker/tools/read_tools.py`
 - Create: `tests/n6/test_read_tools.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/n6/test_read_tools.py
@@ -1005,12 +1005,12 @@ def test_browse_project(seeded_db):
     assert "proj-alpha" in r["projects"]
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_read_tools.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement read tools**
+- [x] **Step 3: Implement read tools**
 
 ```python
 # src/n6_memory_broker/tools/read_tools.py
@@ -1081,12 +1081,12 @@ def handle_memory_browse_project(
     return {"status": "ok", "projects": [r[0] for r in rows]}
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_read_tools.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/n6_memory_broker/tools/read_tools.py tests/n6/test_read_tools.py
@@ -1095,13 +1095,17 @@ git commit -m "feat(n6): MCP read tools — search, recent, browse namespace/pro
 
 ---
 
-## Task 7: MCP Admin Tools (memory_stats + memory_archive_status)
+## Task 7: MCP Admin Tools (memory_compact + memory_health)
+
+> **⚠️ Spec 同步備註 (2026-05-19)**：原設計名為 `memory_stats` + `memory_archive_status`，
+> 施工方 (Gemini) 在 Session #17/#18 中重新命名為 `memory_compact` + `memory_health`，
+> 因實際功能更精確對應此命名。以下程式碼區塊保留原始 Spec 作為歷史紀錄。
 
 **Files:**
 - Create: `src/n6_memory_broker/tools/admin_tools.py`
 - Create: `tests/n6/test_admin_tools.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/n6/test_admin_tools.py
@@ -1138,16 +1142,16 @@ def test_archive_status_general_blocked(seeded_db):
     assert r["status"] == "error"
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_admin_tools.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement admin tools**
+- [x] **Step 3: Implement admin tools**
 
 ```python
 # src/n6_memory_broker/tools/admin_tools.py
-"""MCP Admin Tools: memory_stats, memory_archive_status."""
+"""MCP Admin Tools: memory_compact, memory_health (originally: memory_stats, memory_archive_status)."""
 import sqlite3
 from datetime import datetime, timezone, timedelta
 from n6_memory_broker.models import CallerIdentity
@@ -1213,12 +1217,12 @@ def handle_memory_archive_status(conn: sqlite3.Connection, agent_id: str) -> dic
     }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_admin_tools.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/n6_memory_broker/tools/admin_tools.py tests/n6/test_admin_tools.py
@@ -1233,7 +1237,7 @@ git commit -m "feat(n6): MCP admin tools — memory_stats + memory_archive_statu
 - Create: `src/n6_memory_broker/embedding.py`
 - Create: `tests/n6/test_embedding.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/n6/test_embedding.py
@@ -1266,12 +1270,12 @@ def test_semantic_search_falls_back_to_fts(tmp_db):
         assert len(results) >= 1
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_embedding.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement embedding module**
+- [x] **Step 3: Implement embedding module**
 
 ```python
 # src/n6_memory_broker/embedding.py
@@ -1354,12 +1358,12 @@ def semantic_search(
     return scored[:limit]
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_embedding.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/n6_memory_broker/embedding.py tests/n6/test_embedding.py
@@ -1374,7 +1378,7 @@ git commit -m "feat(n6): embedding layer — Gemini + FTS5 fallback"
 - Create: `src/n6_memory_broker/decay.py`
 - Create: `tests/n6/test_decay.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/n6/test_decay.py
@@ -1432,12 +1436,12 @@ def test_archive_moves_to_archive_table(tmp_db):
     assert row is None  # Removed from active table
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_decay.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement decay engine**
+- [x] **Step 3: Implement decay engine**
 
 ```python
 # src/n6_memory_broker/decay.py
@@ -1537,12 +1541,12 @@ def archive_memories(conn: sqlite3.Connection, memory_ids: list[int]) -> int:
     return archived
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_decay.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/n6_memory_broker/decay.py tests/n6/test_decay.py
@@ -1557,7 +1561,7 @@ git commit -m "feat(n6): γ-decay engine — tier promotion + archival"
 - Create: `src/n6_memory_broker/legacy_migrator.py`
 - Create: `tests/n6/test_legacy_migrator.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/n6/test_legacy_migrator.py
@@ -1598,12 +1602,12 @@ def test_migrate_file_idempotent(tmp_db, tmp_path):
     assert mid2 == mid1  # Same ID, not a new record
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement migrator**
+- [x] **Step 3: Implement migrator**
 
 ```python
 # src/n6_memory_broker/legacy_migrator.py
@@ -1674,12 +1678,12 @@ def run_full_migration(conn: sqlite3.Connection, legacy_root: Path) -> dict:
     return stats
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_legacy_migrator.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/n6_memory_broker/legacy_migrator.py tests/n6/test_legacy_migrator.py
@@ -1694,7 +1698,7 @@ git commit -m "feat(n6): legacy migration — 39 files → N6 store (idempotent)
 - Modify: `src/n6_memory_broker/server.py`
 - Create: `tests/n6/test_server_integration.py`
 
-- [ ] **Step 1: Write failing integration test**
+- [x] **Step 1: Write failing integration test**
 
 ```python
 # tests/n6/test_server_integration.py
@@ -1718,12 +1722,12 @@ def test_server_tool_count():
     assert len(server.list_tools()) == 8
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_integration.py -v`
 Expected: FAIL (tools not registered yet)
 
-- [ ] **Step 3: Register all tools on the server**
+- [x] **Step 3: Register all tools on the server**
 
 Update `src/n6_memory_broker/server.py` to register all 8 tools via `@server.tool()` decorators that delegate to the handler functions. Each tool should accept `agent_id` as a required parameter and forward to the corresponding `handle_*` function with a shared DB connection.
 
@@ -1809,17 +1813,17 @@ if __name__ == "__main__":
     server.run(transport="stdio")
 ```
 
-- [ ] **Step 4: Run integration test**
+- [x] **Step 4: Run integration test**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/test_server_integration.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Run full test suite**
+- [x] **Step 5: Run full test suite**
 
 Run: `cd D:\Agent_Hub\agents\Mem_Agent && python -m pytest tests/n6/ -v`
 Expected: ALL PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/n6_memory_broker/server.py tests/n6/test_server_integration.py
