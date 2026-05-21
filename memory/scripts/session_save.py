@@ -8,14 +8,45 @@
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from datetime import datetime, timezone
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 
 sys.path.insert(0, str(Path(__file__).parent))
-from agent_session_db import get_db_path, init_db, save_session
+from agent_session_db import get_db_path, init_db, save_session, mark_synced
 
 sys.stdout.reconfigure(encoding='utf-8')
+
+N6_INGEST_URL = "http://127.0.0.1:6060/api/ingest"
+
+
+def push_to_n6(agent_id: str, session_id: int, summary: str,
+               decisions: str, next_steps: str, tags: str) -> bool:
+    """Non-blocking push to N6. Returns True if successful."""
+    payload = json.dumps({
+        "agent_id": agent_id,
+        "source": "smpp",
+        "source_id": f"{agent_id}_session_{session_id}",
+        "content": json.dumps({
+            "summary": summary,
+            "decisions": decisions,
+            "next_steps": next_steps,
+        }, ensure_ascii=False),
+        "tags": [t.strip() for t in tags.split(",") if t.strip()] + ["smpp", "session"],
+        "namespace": "session",
+        "channel": "smpp",
+    }, ensure_ascii=False).encode("utf-8")
+
+    req = Request(N6_INGEST_URL, data=payload,
+                  headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urlopen(req, timeout=5) as resp:
+            return resp.status == 200
+    except (URLError, OSError, TimeoutError):
+        return False
 
 
 def main():
@@ -44,13 +75,28 @@ def main():
         session_ts=datetime.now(timezone.utc).isoformat(),
     )
 
+    # ─── Push to N6 (non-blocking) ───
+    pushed = push_to_n6(
+        agent_id=args.agent,
+        session_id=session_id,
+        summary=args.summary,
+        decisions=args.decisions,
+        next_steps=args.next_steps,
+        tags=args.tags,
+    )
+    if pushed:
+        mark_synced(conn, session_id)
+
     conn.close()
 
+    sync_status = "✅ synced" if pushed else "⏳ pending (Inspector will harvest)"
     print(f"[SESSION_SAVE] {args.agent} session #{session_id} saved to {db_path}")
     print(f"  Summary: {args.summary[:80]}...")
     print(f"  StepGate count: {args.steps}")
     print(f"  Tags: {args.tags or '(none)'}")
+    print(f"  N6 push: {sync_status}")
 
 
 if __name__ == "__main__":
     main()
+

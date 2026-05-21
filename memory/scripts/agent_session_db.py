@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # ─── DB 路徑解析 ───────────────────────────────────────────────────────────────
 
@@ -50,6 +50,7 @@ def init_db(db_path: Path) -> sqlite3.Connection:
             decisions   TEXT,
             next_steps  TEXT,
             tags        TEXT,
+            synced_to_n6 INTEGER DEFAULT 0,
             created_at  TEXT NOT NULL,
             updated_at  TEXT NOT NULL
         );
@@ -70,10 +71,18 @@ def init_db(db_path: Path) -> sqlite3.Connection:
     except sqlite3.OperationalError:
         pass  # 已存在
 
-    # Schema version
+    # Schema version + migration
     ver = conn.execute("SELECT version FROM schema_version").fetchone()
     if not ver:
         conn.execute("INSERT INTO schema_version VALUES (?)", (SCHEMA_VERSION,))
+        conn.commit()
+    elif ver[0] < SCHEMA_VERSION:
+        # v1 → v2: add synced_to_n6 column
+        try:
+            conn.execute("ALTER TABLE sessions ADD COLUMN synced_to_n6 INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # column already exists
+        conn.execute("UPDATE schema_version SET version = ?", (SCHEMA_VERSION,))
         conn.commit()
 
     return conn
@@ -219,3 +228,25 @@ def get_session_stats(conn: sqlite3.Connection, agent_id: str) -> dict:
         FROM sessions WHERE agent_id = ?
     """, (agent_id,)).fetchone()
     return dict(row) if row else {}
+
+
+# ─── N6 同步追蹤 ──────────────────────────────────────────────────────────────
+
+def mark_synced(conn: sqlite3.Connection, session_id: int) -> None:
+    """標記 session 已同步到 N6。"""
+    conn.execute(
+        "UPDATE sessions SET synced_to_n6 = 1 WHERE id = ?",
+        (session_id,)
+    )
+    conn.commit()
+
+
+def get_unsynced(conn: sqlite3.Connection) -> list[dict]:
+    """取得所有未同步到 N6 的 sessions。"""
+    rows = conn.execute("""
+        SELECT * FROM sessions
+        WHERE synced_to_n6 = 0
+        ORDER BY created_at ASC
+    """).fetchall()
+    return [dict(r) for r in rows]
+
