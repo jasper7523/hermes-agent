@@ -89,12 +89,30 @@ def main():
 
     conn.close()
 
-    sync_status = "✅ synced" if pushed else "⏳ pending (Inspector will harvest)"
+    sync_status = "synced" if pushed else "pending (Inspector will harvest)"
     print(f"[SESSION_SAVE] {args.agent} session #{session_id} saved to {db_path}")
     print(f"  Summary: {args.summary[:80]}...")
     print(f"  StepGate count: {args.steps}")
     print(f"  Tags: {args.tags or '(none)'}")
     print(f"  N6 push: {sync_status}")
+
+    # ─── N7-FIX-20260522: IDE 對話 DB 健康維護 ───
+    # 在 session 存檔完成後，非阻塞式檢查 Antigravity IDE 的對話 DB
+    # 是否因 WAL 碎片膨脹需要壓縮。閾值：50 MB 總大小 + 10 MB 碎片。
+    try:
+        shared_dir = Path(__file__).parent.parent.parent.parent / ".shared"
+        compact_script = shared_dir / "compact_ide_dbs.py"
+        if compact_script.exists():
+            sys.path.insert(0, str(shared_dir))
+            from compact_ide_dbs import scan_and_compact
+            results = scan_and_compact(threshold_mb=50, dry_run=False)
+            if results:
+                total_saved = sum(r["saved_mb"] for r in results if r["success"])
+                if total_saved > 0:
+                    print(f"  IDE DB compact: saved {total_saved:.1f} MB")
+    except Exception as e:
+        # 絕不因 DB 維護失敗而阻斷 session 存檔流程
+        print(f"  IDE DB compact: skipped ({e})")
 
 
 if __name__ == "__main__":
