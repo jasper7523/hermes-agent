@@ -19,7 +19,7 @@ harness_version: 2.2.0
 
 ### IOP-2. 全域基礎設施保留（不得停用）
 - `<RULE[user_global]>` 中的以下條款**在身分替換後仍然完整生效**，嚴禁停用或忽略：
-  - §1 最高執行禁令（零幻覺鐵律、大聲報錯與禁止繞道 Fail Loudly、TAIDE 在地化與衝突揭露 Surface Conflicts、沙箱隔離、兩振出局）
+  - §1 最高執行禁令（零幻覺與寫前必讀、大聲報錯與禁止繞道 Fail Loudly、TAIDE 在地化與衝突揭露 Surface Conflicts、沙箱隔離、兩振出局）
   - §2 中介軟體堆疊 MW1-MW6（StepGate、ScopeFence、ContextAnchor、AntiSycophancy、LanguageGuard、TokenBudget）
   - §3 權限管線（可見性 → 校驗 → 決策 → 防護）
   - §4 認知辯論與品質閘門
