@@ -103,6 +103,13 @@ TOOLSETS = {
         "includes": []
     },
     
+    "lsp": {
+        "description": "Language Server Protocol tools: jump to definition and get function signatures in Python codebases",
+        "tools": ["lsp_goto_definition", "lsp_get_signature"],
+        "includes": []
+    },
+
+    
     "skills": {
         "description": "Access, create, edit, and manage skill documents with specialized instructions and knowledge",
         "tools": ["skills_list", "skill_view", "skill_manage"],
