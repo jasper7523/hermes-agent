@@ -292,6 +292,70 @@ The registry handles schema collection, dispatch, availability checking, and err
 
 ---
 
+## LSP Tools — Code Navigation via Language Server
+
+The `lsp` toolset provides two tools that use a background Language Server
+(jedi-language-server) for **precise code navigation** instead of text-based
+grep.  Included in `hermes-cli` and `hermes-acp` toolsets.
+
+### Available Tools
+
+| Tool | Purpose | Replaces |
+|------|---------|----------|
+| `lsp_goto_definition` | Jump to where a symbol is defined (file + line + context) | `search_files` for "where is X defined?" |
+| `lsp_get_signature` | Get function signature + parameter types + docstring | `read_file` with StartLine/EndLine for "what are the params?" |
+
+### When to Use LSP vs search_files/read_file
+
+| Scenario | Best Tool | Why |
+|----------|-----------|-----|
+| "Where is `registry.register()` defined?" | `lsp_goto_definition` | 1 precise result vs 16 grep hits |
+| "What params does `tool_error()` accept?" | `lsp_get_signature` | Returns signature only (~50 tokens) vs reading entire file |
+| "Find all files that import X" | `search_files` | LSP finds definitions, not references |
+| "Read lines 100-150 of file" | `read_file` | LSP is for symbol queries, not line ranges |
+| "Search for error message text" | `search_files` | LSP works with symbols, not arbitrary strings |
+
+### Architecture
+
+```
+tools/lsp_tools.py     → Agent-facing tool handlers + schemas
+agent/lsp_client.py    → LSP subprocess manager (JSON-RPC over stdio)
+                         ├── Workspace root detection (.git, pyproject.toml)
+                         ├── Venv/Python exe detection (venv/ → .venv/ → sys)
+                         ├── jedi-language-server auto-install
+                         ├── Per-workspace singleton caching
+                         └── atexit cleanup to prevent orphan processes
+```
+
+### Key Design Decisions
+
+- **Fail-safe**: All LSP failures return a helpful error string directing to
+  `search_files`/`read_file` fallback.  The agent NEVER crashes.
+- **Auto-install**: jedi-language-server is pip-installed into the project
+  venv if missing.
+- **Multi-workspace**: Supports N5, N7, and N8 workspaces via dynamic
+  workspace root detection.  Each workspace gets its own LSP server instance.
+- **Threading**: Background `threading.Thread` reads stdout; main thread
+  sends requests and blocks on `queue.Queue` with 5-second timeout.
+
+### Parameters (both tools)
+
+- `path` (required): Absolute path to the Python file
+- `line` (required): 1-indexed line number where the symbol appears
+- `character` (required): 1-indexed column number (position of symbol name)
+
+### Known Limitations
+
+1. **Column precision**: The agent must estimate the column position of the
+   symbol on the line.  If imprecise, the LSP may return no result — fall back
+   to `search_files`.
+2. **Python only**: jedi-language-server works exclusively with Python.  For
+   TypeScript/YAML/etc., use `search_files`.
+3. **No reference search**: LSP `goto_definition` finds definitions, not all
+   usages.  Use `search_files` for "find all callers of X".
+
+
+
 ## Adding Configuration
 
 ### config.yaml options
