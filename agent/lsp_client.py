@@ -13,14 +13,14 @@ Key design decisions (from Phase 4 design contract):
 
 Workspace & venv detection algorithm:
   1. Walk up from the target file to find the nearest project root
-     (.git, pyproject.toml, setup.py, shared-dna.md).
+     (.git, pyproject.toml, setup.py, setup.cfg).
   2. Locate the venv inside that root (venv/ → .venv/ → system Python).
   3. Start the language server scoped to that workspace root.
   4. Cache one LSPClient instance per workspace root to avoid duplicate
      processes when N5/N8 share the same Agent_Hub workspace.
 
 Safety:
-  - 3-second hard timeout on every request.
+  - 5-second hard timeout on every request.
   - atexit + __del__ cleanup to prevent orphan processes.
   - All failures are non-fatal: callers get None and can fall back to
     grep/view_file.
@@ -222,6 +222,7 @@ class LSPClient:
         self._proc: Optional[subprocess.Popen] = None
         self._recv_thread: Optional[threading.Thread] = None
         self._initialized = False
+        self._opened_uris: set = set()  # Track didOpen'd files to avoid duplicates
 
         cmd = resolve_server_cmd(workspace_root, python_exe)
         if cmd is None:
@@ -414,13 +415,16 @@ class LSPClient:
         """Gracefully shut down the language server."""
         if not self._proc:
             return
-        self._alive = False
 
+        # Send shutdown/exit BEFORE setting _alive=False, otherwise
+        # _send_request short-circuits on the alive check.
         try:
             self._send_request("shutdown", {}, timeout=2.0)
             self._send_notification("exit", {})
         except Exception:
             pass
+
+        self._alive = False
 
         try:
             self._proc.terminate()
@@ -443,8 +447,14 @@ class LSPClient:
     # ------------------------------------------------------------------
 
     def _did_open(self, filepath: Path):
-        """Notify the server that we opened a file (so it can index it)."""
+        """Notify the server that we opened a file (so it can index it).
+
+        Tracks previously opened URIs to avoid sending duplicate didOpen
+        notifications, which some servers treat as protocol errors.
+        """
         uri = filepath.resolve().as_uri()
+        if uri in self._opened_uris:
+            return
         try:
             text = filepath.read_text(encoding="utf-8", errors="replace")
         except OSError:
@@ -457,6 +467,7 @@ class LSPClient:
                 "text": text,
             }
         })
+        self._opened_uris.add(uri)
 
     # ------------------------------------------------------------------
     #  Public API: Go-to-Definition

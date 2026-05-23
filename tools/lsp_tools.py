@@ -13,6 +13,7 @@ import json
 import logging
 from pathlib import Path
 from typing import Optional
+from urllib.parse import unquote as _url_unquote
 
 from tools.registry import registry, tool_error, tool_result
 
@@ -63,12 +64,9 @@ def _uri_to_path(uri: str) -> str:
     if uri.startswith("file:///"):
         # Windows: file:///C:/foo → C:/foo
         raw = uri[8:]  # strip file:///
-        # URL-decode %xx
-        from urllib.parse import unquote
-        return unquote(raw)
+        return _url_unquote(raw)
     if uri.startswith("file://"):
-        from urllib.parse import unquote
-        return unquote(uri[7:])
+        return _url_unquote(uri[7:])
     return uri
 
 
