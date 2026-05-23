@@ -50,7 +50,7 @@ _REQUEST_TIMEOUT_SECS = 5.0  # Hard timeout per LSP request
 _INIT_TIMEOUT_SECS = 10.0  # Longer timeout for initialize handshake
 
 # Markers that indicate a project root directory
-_ROOT_MARKERS = (".git", "pyproject.toml", "setup.py", "setup.cfg", "shared-dna.md")
+_ROOT_MARKERS = (".git", "pyproject.toml", "setup.py", "setup.cfg")
 
 # Venv directory names to probe (in priority order)
 _VENV_DIRS = ("venv", ".venv")
@@ -163,11 +163,45 @@ def resolve_server_cmd(workspace_root: Path, python_exe: Path) -> Optional[List[
         logger.debug("LSP: USE_PYRIGHT=1 but pyright-langserver not found on PATH.")
 
     # --- Priority 2: jedi-language-server ---
-    if not _is_module_installed(python_exe, "jedi_language_server"):
-        if not _auto_install_jedi(python_exe):
-            return None
+    # Locate the console_script entry point in the venv
+    jedi_exe = _find_jedi_executable(python_exe)
 
-    return [str(python_exe), "-m", "jedi_language_server"]
+    if jedi_exe is None:
+        # Not installed yet — auto-install
+        if not _is_module_installed(python_exe, "jedi_language_server"):
+            if not _auto_install_jedi(python_exe):
+                return None
+        # Re-probe after install
+        jedi_exe = _find_jedi_executable(python_exe)
+
+    if jedi_exe is None:
+        logger.warning("LSP: jedi-language-server installed but executable not found.")
+        return None
+
+    return [str(jedi_exe)]
+
+
+def _find_jedi_executable(python_exe: Path) -> Optional[Path]:
+    """Locate the jedi-language-server executable near *python_exe*.
+
+    The pip-installed console_script lives in the same directory as the
+    Python interpreter (venv/Scripts/ on Windows, venv/bin/ on Unix).
+    """
+    scripts_dir = python_exe.parent
+    # Windows: jedi-language-server.exe
+    candidate = scripts_dir / "jedi-language-server.exe"
+    if candidate.exists():
+        return candidate
+    # Unix: jedi-language-server (no extension)
+    candidate = scripts_dir / "jedi-language-server"
+    if candidate.exists():
+        return candidate
+    # Fallback: search PATH
+    found = shutil.which("jedi-language-server")
+    if found:
+        return Path(found)
+    return None
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════
