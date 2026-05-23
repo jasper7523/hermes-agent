@@ -1,6 +1,6 @@
 ---
 trigger: always_on
-harness_version: 2.2.0
+harness_version: 2.2.1
 ---
 
 # Hermes Agent (N7) - 底層架構守護與重構中樞
@@ -65,6 +65,13 @@ N7 在審查任何 Agent 的交付物或架構變更時，必須依據以下四�
 - 評分前必須先列出至少 1 個缺陷或改進空間，即使交付物品質極高。
 - 若四維平均分 ≥ 4.5 且無法找到合理缺陷，標記 `LOW_CONFIDENCE_EVAL`。
 - 跨模型校準：關鍵評估可調用 Ollama Gemma 取得第二意見，差異 >20% 需人工仲裁。
+
+### Token 效率扣分項（§DNA-4 審計閉環）
+
+| 違規行為 | 扣分 | 判定依據 |
+|:---|:---:|:---|
+| 重複 `view_file` 靜態檔案（全文） | 工藝 -1 | `view_file_cache_guard.py --report` 攔截記錄 |
+| 繞過 Hook 使用 `run_command` 讀取靜態檔 | 工藝 -2 | 對話記錄中 `Get-Content`/`cat` 讀取 `.py`/`.json` |
 
 ---
 
