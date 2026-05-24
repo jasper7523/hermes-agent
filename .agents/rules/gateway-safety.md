@@ -1,14 +1,14 @@
 ---
-description: N7 Gateway 平台安全守則
+description: N7 Gateway Platform Safety Rules
 paths:
   - "gateway/**"
   - "gateway/platforms/**"
-harness_version: 2.2.0
+harness_version: 2.2.1
 ---
-# N7 Gateway 平台安全守則
+# N7 Gateway Platform Safety Rules
 
-1. **Token Lock**：平台適配器必須在 `connect()` 時呼叫 `acquire_scoped_lock()`，`disconnect()` 時呼叫 `release_scoped_lock()`。
-2. **Prompt Caching**：嚴禁在對話中途改變 toolsets 或重建 system prompts。
-3. **背景通知**：遵守 `display.background_process_notifications` 設定值。
-4. **Profile 安全**：使用 `get_hermes_home()` 取得路徑，嚴禁寫死 `~/.hermes`。
-5. **Schema 隔離**：Tool schema descriptions 禁止寫死跨 toolset 的工具名稱。
+1. **Token Lock**: Platform adapters MUST call `acquire_scoped_lock()` on `connect()` and `release_scoped_lock()` on `disconnect()`.
+2. **Prompt Caching**: DO NOT alter toolsets or rebuild system prompts mid-conversation.
+3. **Background Notifications**: Follow the `display.background_process_notifications` config value.
+4. **Profile Safety**: Use `get_hermes_home()` to resolve paths. DO NOT hardcode `~/.hermes`.
+5. **Schema Isolation**: Tool schema descriptions MUST NOT hardcode tool names from other toolsets.

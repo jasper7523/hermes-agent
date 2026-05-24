@@ -1,14 +1,14 @@
 ---
-description: N7 記憶腳本開發守則
+description: N7 Memory Script Development Rules
 paths:
   - "memory/scripts/**/*.py"
   - "memory/session_state.db"
-harness_version: 2.2.0
+harness_version: 2.2.1
 ---
-# N7 記憶腳本開發守則
+# N7 Memory Script Development Rules
 
-1. **session_state.db** 僅可透過 `agent_session_db.py` 中的函式存取。
-2. **禁止**直接執行 SQL 或使用 `sqlite3` 模組繞過 ORM。
-3. **encoding**：所有腳本必須使用 `sys.stdout.reconfigure(encoding='utf-8')`。
-4. **CLI 參數**：連字號格式（`--next-steps`），非底線（`--next_steps`）。
-5. **錯誤處理**：DB 連線失敗時必須 Fail Loudly，禁止靜默吞掉例外。
+1. **session_state.db**: MUST only be accessed through functions in `agent_session_db.py`.
+2. **No raw SQL**: DO NOT directly execute SQL or use the `sqlite3` module to bypass the ORM.
+3. **Encoding**: All scripts MUST use `sys.stdout.reconfigure(encoding='utf-8')`.
+4. **CLI arguments**: Use hyphen format (`--next-steps`), NOT underscore (`--next_steps`).
+5. **Error handling**: WHEN DB connection fails, THEN Fail Loudly. DO NOT silently swallow exceptions.
