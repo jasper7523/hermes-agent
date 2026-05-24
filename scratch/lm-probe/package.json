@@ -2,8 +2,9 @@
   "name": "lm-probe",
   "displayName": "LM Probe — Language Model API Tester",
   "description": "Probes the vscode.lm API to discover available language models in the IDE",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "agent-hub",
+  "enabledApiProposals": ["languageModelProxy"],
   "engines": {
     "vscode": "^1.90.0"
   },
