@@ -1,0 +1,16 @@
+{
+  "message_id": "msg_20260524_104129_51657d16",
+  "sender_id": "N1",
+  "receiver_id": "N7",
+  "intent": "GENERAL_MESSAGE",
+  "payload": {
+    "test": true,
+    "message": "Phase 1 smoke test"
+  },
+  "status": "processing",
+  "token_budget": null,
+  "retry_count": 0,
+  "created_at": "2026-05-24T10:41:29.023612+00:00",
+  "updated_at": "2026-05-24T10:41:29.041864+00:00",
+  "metadata": {}
+}
