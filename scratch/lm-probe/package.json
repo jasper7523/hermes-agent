@@ -1,0 +1,37 @@
+{
+  "name": "lm-probe",
+  "displayName": "LM Probe — Language Model API Tester",
+  "description": "Probes the vscode.lm API to discover available language models in the IDE",
+  "version": "0.0.1",
+  "publisher": "agent-hub",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "lmProbe.checkModels",
+        "title": "LM Probe: Check Available Models"
+      },
+      {
+        "command": "lmProbe.testGenerate",
+        "title": "LM Probe: Test Generate (Hello World)"
+      },
+      {
+        "command": "lmProbe.fullReport",
+        "title": "LM Probe: Full API Report"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "package": "npx -y @vscode/vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.5.0"
+  }
+}
