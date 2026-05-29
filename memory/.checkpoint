@@ -1,6 +1,6 @@
 AGENT_ID=N7
-SESSION_ID=164
-LAST_SUMMARY=完成 CodeGraph 研究報告與 N3 pageindex_adapter 架構提案之 N7 四維度評估（附條件核准，平均 3.375/5）
-NEXT_STEPS=等待 N3 依 4 項條件修正後重新提交二審；CodeGraph KI 已建立可供全域檢索
-TAGS=codegraph,research-report,n3-review,pageindex-adapter,evaluator,smpp,ki
-SAVED_AT=2026-05-29T14:23:14.048350+08:00
+SESSION_ID=166
+LAST_SUMMARY=修復 N3 software-engineer-agent.md 規則 frontmatter 設定，將 scope: per_project_rules 修改為 trigger: always_on 以使 Antigravity IDE 
+NEXT_STEPS=
+TAGS=n3-rules,ide-customization,smpp,frontmatter
+SAVED_AT=2026-05-29T15:55:39.603731+08:00
