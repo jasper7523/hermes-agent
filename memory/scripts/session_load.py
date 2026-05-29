@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""session_load.py — Agent 對話開場時載入最近 session 上下文
+"""session_load.py — N5 對話開場時載入最近 session 上下文
 
 用法：
-    python memory/scripts/session_load.py [--agent N7] [--limit 3]
+    python D:/Agent_Hub/agents/Book_Writer_Agent/memory/scripts/session_load.py [--agent N5] [--limit 3]
 
 輸出：
     將最近 N 筆 session 的摘要、決策、下一步以結構化文本輸出到 stdout，
@@ -22,7 +22,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 def main():
     parser = argparse.ArgumentParser(description="載入 Agent 最近 session 上下文")
-    parser.add_argument("--agent", default="N7", help="Agent ID (預設: N7)")
+    parser.add_argument("--agent", default="N5", help="Agent ID (預設: N5)")
     parser.add_argument("--limit", type=int, default=3, help="載入筆數 (預設: 3)")
     parser.add_argument("--root", default=None, help="Agent 工作區根目錄")
     args = parser.parse_args()
@@ -62,6 +62,21 @@ def main():
         if s.get('tags'):
             print(f"標籤: {s['tags']}")
         print()
+
+    # ─── N7-FIX-20260529: Auto-read Post-Compaction Anchor ───
+    # Display .checkpoint content alongside session memory so the agent
+    # always sees its last confirmed state, even after Context Compaction.
+    checkpoint_path = root / "memory" / ".checkpoint"
+    if checkpoint_path.exists():
+        try:
+            ckpt_text = checkpoint_path.read_text(encoding="utf-8").strip()
+            print("--- 【PCA Checkpoint (壓縮後錨定)】 ---")
+            for line in ckpt_text.splitlines():
+                print(f"  {line}")
+            print()
+        except Exception:
+            print("--- 【PCA Checkpoint】讀取失敗，請手動 type checkpoint ---")
+            print()
 
     print("=== END SESSION MEMORY ===")
 

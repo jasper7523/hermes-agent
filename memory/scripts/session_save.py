@@ -64,6 +64,7 @@ def main():
     db_path = get_db_path(root)
     conn = init_db(db_path)
 
+    session_ts = datetime.now(timezone.utc).isoformat()
     session_id = save_session(
         conn=conn,
         agent_id=args.agent,
@@ -72,8 +73,31 @@ def main():
         next_steps=args.next_steps,
         tags=args.tags,
         stepgate_count=args.steps,
-        session_ts=datetime.now(timezone.utc).isoformat(),
+        session_ts=session_ts,
     )
+
+    # ─── N7-FIX-20260529: Post-Compaction Anchor ───
+    # Writes a lightweight .checkpoint plaintext file that survives Context
+    # Compaction. After compaction, the agent reads this file FIRST to know
+    # its last completed state, instead of relying on (lossy) LLM memory.
+    # Incident ref: Task 24 ghost execution (conversation 63a0d3c0).
+    try:
+        checkpoint_path = root / "memory" / ".checkpoint"
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        local_ts = datetime.now().astimezone().isoformat()
+        checkpoint_lines = [
+            f"AGENT_ID={args.agent}",
+            f"SESSION_ID={session_id}",
+            f"LAST_SUMMARY={args.summary[:120]}",
+            f"NEXT_STEPS={args.next_steps[:120]}",
+            f"TAGS={args.tags}",
+            f"SAVED_AT={local_ts}",
+        ]
+        checkpoint_path.write_text(
+            "\n".join(checkpoint_lines) + "\n", encoding="utf-8"
+        )
+    except Exception:
+        pass  # Checkpoint is best-effort; never block session save
 
     # ─── Push to N6 (non-blocking) ───
     pushed = push_to_n6(
