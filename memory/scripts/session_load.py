@@ -20,6 +20,47 @@ from agent_session_db import get_db_path, init_db, load_latest_sessions, get_ses
 sys.stdout.reconfigure(encoding='utf-8')
 
 
+def fetch_n6_recent_global(exclude_agent: str, limit: int = 3) -> list:
+    """從 N6 Web API 獲取最近其他 Agent 的 session 記錄"""
+    import urllib.request
+    import json
+    
+    url = f"http://127.0.0.1:6060/api/memories?namespace=session&limit={limit * 3}"
+    req = urllib.request.Request(url, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read().decode("utf-8"))
+                memories = data.get("memories", [])
+                
+                global_sessions = []
+                for m in memories:
+                    if m.get("agent_id") == exclude_agent:
+                        continue
+                    
+                    content_str = m.get("content", "")
+                    try:
+                        content_data = json.loads(content_str)
+                    except Exception:
+                        content_data = {"summary": content_str}
+                        
+                    global_sessions.append({
+                        "agent_id": m.get("agent_id"),
+                        "created_at": m.get("created_at", ""),
+                        "summary": content_data.get("summary", ""),
+                        "decisions": content_data.get("decisions", ""),
+                        "next_steps": content_data.get("next_steps", ""),
+                        "tags": m.get("tags", [])
+                    })
+                    
+                    if len(global_sessions) >= limit:
+                        break
+                return global_sessions
+    except Exception:
+        pass
+    return []
+
+
 def main():
     parser = argparse.ArgumentParser(description="載入 Agent 最近 session 上下文")
     parser.add_argument("--agent", default="N5", help="Agent ID (預設: N5)")
@@ -33,39 +74,53 @@ def main():
     if not db_path.exists():
         print(f"[SESSION_LOAD] 尚無 session 記錄 ({db_path})")
         print("[SESSION_LOAD] 這是首次對話，無需恢復上下文。")
-        return
+    else:
+        conn = init_db(db_path)
+        sessions = load_latest_sessions(conn, args.agent, args.limit)
+        stats = get_session_stats(conn, args.agent)
+        conn.close()
 
-    conn = init_db(db_path)
-    sessions = load_latest_sessions(conn, args.agent, args.limit)
-    stats = get_session_stats(conn, args.agent)
-    conn.close()
+        if sessions:
+            # 輸出結構化上下文
+            print(f"=== {args.agent} Session Memory ===")
+            print(f"歷史 session 總數: {stats.get('total', 0)}")
+            print(f"累計 StepGate 步數: {stats.get('total_steps', 0)}")
+            print()
 
-    if not sessions:
-        print(f"[SESSION_LOAD] {args.agent} 尚無 session 記錄。")
-        return
+            for i, s in enumerate(sessions):
+                label = "【最近一次】" if i == 0 else f"【前 {i+1} 次】"
+                print(f"--- {label} {s['session_ts'][:16]} (StepGate×{s['stepgate_count']}) ---")
+                if s.get('summary'):
+                    print(f"摘要: {s['summary']}")
+                if s.get('decisions'):
+                    print(f"決策: {s['decisions']}")
+                if s.get('next_steps'):
+                    print(f"下一步: {s['next_steps']}")
+                if s.get('tags'):
+                    print(f"標籤: {s['tags']}")
+                print()
 
-    # 輸出結構化上下文
-    print(f"=== {args.agent} Session Memory ===")
-    print(f"歷史 session 總數: {stats.get('total', 0)}")
-    print(f"累計 StepGate 步數: {stats.get('total_steps', 0)}")
-    print()
-
-    for i, s in enumerate(sessions):
-        label = "【最近一次】" if i == 0 else f"【前 {i+1} 次】"
-        print(f"--- {label} {s['session_ts'][:16]} (StepGate×{s['stepgate_count']}) ---")
-        if s.get('summary'):
-            print(f"摘要: {s['summary']}")
-        if s.get('decisions'):
-            print(f"決策: {s['decisions']}")
-        if s.get('next_steps'):
-            print(f"下一步: {s['next_steps']}")
-        if s.get('tags'):
-            print(f"標籤: {s['tags']}")
-        print()
+    # ─── N6 全域記憶載入 (跨節點近期動態) ───
+    try:
+        global_mems = fetch_n6_recent_global(exclude_agent=args.agent, limit=3)
+        if global_mems:
+            print("=== N6 全域共享記憶 (跨節點近期動態) ===")
+            for gm in global_mems:
+                time_str = gm['created_at'][:16] if gm.get('created_at') else "未知時間"
+                print(f"--- 節點: {gm['agent_id']} | 時間: {time_str} ---")
+                if gm.get('summary'):
+                    print(f"  摘要: {gm['summary']}")
+                if gm.get('decisions'):
+                    print(f"  決策: {gm['decisions']}")
+                if gm.get('next_steps'):
+                    print(f"  下一步: {gm['next_steps']}")
+                print()
+            print("=== END N6 GLOBAL MEMORY ===")
+            print()
+    except Exception:
+        pass
 
     # ─── N7-FIX-20260529: Auto-read Post-Compaction Anchor ───
-    # Display .checkpoint content alongside session memory so the agent
-    # always sees its last confirmed state, even after Context Compaction.
     checkpoint_path = root / "memory" / ".checkpoint"
     if checkpoint_path.exists():
         try:
@@ -83,3 +138,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
