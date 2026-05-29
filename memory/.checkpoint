@@ -1,6 +1,6 @@
 AGENT_ID=N7
-SESSION_ID=154
-LAST_SUMMARY=完成 Post-Compaction Anchor (PCA) 機制實作與全節點部署：修改 session_save.py 加入 .checkpoint 寫入；更新 shared-dna.md 新增 §DNA-6 PCA 協議；同步至 N1
-NEXT_STEPS=NS1: 通知 N5 在下次對話中測試 PCA 流程是否正常觸發；NS2: 觀察是否需要在 session_load.py 中也加入 checkpoint 讀取
-TAGS=n7-fix,pca,checkpoint,cross-node,shared-dna
-SAVED_AT=2026-05-29T11:33:49.730364+08:00
+SESSION_ID=155
+LAST_SUMMARY=完成 Task 24 幽靈執行事件完整鑑識：(1) 讀取 conversation 63a0d3c0 的 transcript.jsonl 共 248 行，確認 Task 24 是用戶 10:55:12 下達指令後由 N5 在 61 秒內正
+NEXT_STEPS=NS1: 用戶將糾正通知貼入 N5 對話; NS2: 觀察下次 N5 文獻整理是否正確觸發 PCA; NS3: 考慮是否需要在 Harness v2.3 中將 PCA 從 shared-dna 提升至 user_global 層級
+TAGS=forensics,pca,checkpoint,cross-node,shared-dna,n5-correction,context-compaction
+SAVED_AT=2026-05-29T11:42:02.328221+08:00
