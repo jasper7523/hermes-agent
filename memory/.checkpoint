@@ -1,6 +1,6 @@
 AGENT_ID=N7
-SESSION_ID=155
-LAST_SUMMARY=完成 Task 24 幽靈執行事件完整鑑識：(1) 讀取 conversation 63a0d3c0 的 transcript.jsonl 共 248 行，確認 Task 24 是用戶 10:55:12 下達指令後由 N5 在 61 秒內正
-NEXT_STEPS=NS1: 用戶將糾正通知貼入 N5 對話; NS2: 觀察下次 N5 文獻整理是否正確觸發 PCA; NS3: 考慮是否需要在 Harness v2.3 中將 PCA 從 shared-dna 提升至 user_global 層級
-TAGS=forensics,pca,checkpoint,cross-node,shared-dna,n5-correction,context-compaction
-SAVED_AT=2026-05-29T11:42:02.328221+08:00
+SESSION_ID=156
+LAST_SUMMARY=完成 GraphRAG 三軌制整合與 N6 daemon 打包修復：(1) 修改 GEMINI.md MW1 StepGate 引入意圖分類門檻以防止模型暴衝；(2) 升級 session_query.py 引入 GraphRAG 為第三記
+NEXT_STEPS=NS1: 監控 MW1 意圖分類門檻的防暴衝表現；NS2: API 503 緩解後生成剩餘 5 個社群摘要；NS3: 確保 N5 遵循 PCA 與 GraphRAG 三軌檢索機制。
+TAGS=graphrag,smpp,pyinstaller,daemon,gemini,mw1,intent-gate
+SAVED_AT=2026-05-29T13:19:29.210035+08:00
