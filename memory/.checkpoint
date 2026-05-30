@@ -1,6 +1,6 @@
 AGENT_ID=N7
-SESSION_ID=174
-LAST_SUMMARY=完成 N3 Token Guard 專案施工報告審查：4.0/5 核准通過（APPROVED）。7 個部署實體檔案全數到位並逐一驗證。NB-1 首次豁免策略以 %TEMP% 狀態檔追蹤、NB-2 hooks.json 巢狀 Schema、N
-NEXT_STEPS=2 天監測期觀察重點：(1) N5 view_file deny 觸發與自動修正行為；(2) write_to_file 攔截效果；(3) Caveman ephemeralMessage 抑制冗餘輸出效果；(4) 狀態檔體積增長。監測期後
-TAGS=n3-review,hooks,evaluator,approved,token-guard,construction-review,monitoring-period,smpp
-SAVED_AT=2026-05-30T20:38:13.836737+08:00
+SESSION_ID=175
+LAST_SUMMARY=完成 N3 提出之 N5 Harness Engineering 整合強化計畫審查：3.375/5 附條件核准。3 項 CRITICAL：(1) hooks.json 使用杜撰的 %WORKSPACE% 環境變數、(2) pre_tool_
+NEXT_STEPS=等待 N3 修正 3 項 CRITICAL 後重新提交。特別關注 AC-3：Skills 遷移至 Plugin 內目錄後 IDE 是否能正確發現，建議先做 Canary 驗證再動。
+TAGS=n3-review,n5-harness,evaluator,conditional-approval,plugin,hooks,skills-migration,smpp
+SAVED_AT=2026-05-30T21:08:09.731368+08:00
