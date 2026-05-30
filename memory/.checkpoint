@@ -1,6 +1,6 @@
 AGENT_ID=N7
-SESSION_ID=172
-LAST_SUMMARY=完成 N3 Hooks 試點計畫書 v2.0 三審：附條件核准（3.625/5）。二審 R-1 至 R-10 修正全數通過（10/10）。IO 協定對齊官方規格、MODIFIED 機制根除、PreInvocation 正確落地為 ephem
-NEXT_STEPS=等待 N3 建立 token-guard Plugin 骨架並執行 Canary Hook 驗證，回報 stdin dump 給 N7 進行最終確認。
-TAGS=n3-review,hooks,evaluator,三審,conditional-approval,canary-hook,token-guard,plugin,smpp
-SAVED_AT=2026-05-30T18:26:55.850843+08:00
+SESSION_ID=173
+LAST_SUMMARY=完成 N3 Canary 驗證覆核：簽發最終核准（Final Approval）。AC-1 三項子條件全數通過：(a) PreInvocation ephemeralMessage 注入確認可行（N7 親歷 + dump 24 筆記錄中 1
+NEXT_STEPS=N3 進入 Phase 1 實作：(1) 更新 hooks.json 為實測 Schema 格式；(2) 決定 view_file deny 策略（全面攔截 vs 首次豁免 vs 節點差異化）；(3) 實作正式版 token_guard_h
+TAGS=n3-review,hooks,evaluator,canary-verification,final-approval,token-guard,plugin,smpp
+SAVED_AT=2026-05-30T20:10:24.860395+08:00
