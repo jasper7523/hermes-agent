@@ -38,9 +38,8 @@ def parse_entries(decoded_bytes, source_name):
             wire_type = tag & 7
             
             if wire_type != 2:
-                # Top level fields in repeated trajectorySummaries are length-delimited (wire_type=2, field=1)
-                pos += 1
-                continue
+                # Top level fields must be length delimited. If not, this is likely corrupt data or we lost sync.
+                break
                 
             length, pos = decode_varint(decoded_bytes, pos)
             if pos + length > len(decoded_bytes):
@@ -50,15 +49,14 @@ def parse_entries(decoded_bytes, source_name):
             full_entry_bytes = decoded_bytes[start_pos:pos+length]
             pos += length
             
-            # Find UUID via regex (safest approach since protobuf schema is unknown)
+            # Find UUID via regex
             entry_str = entry_data.decode('utf-8', errors='ignore')
             match = re.search(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', entry_str)
             if match:
                 uuid = match.group()
                 entries[uuid] = full_entry_bytes
         except Exception as e:
-            # Skip bad varints
-            pos += 1
+            break
     return entries
 
 def get_vscdb_payload(db_path):
@@ -69,7 +67,6 @@ def get_vscdb_payload(db_path):
         row = cursor.fetchone()
         conn.close()
         if row:
-            # Some versions might save as bytes or text
             if isinstance(row[0], bytes):
                 return base64.b64decode(row[0])
             else:
@@ -97,27 +94,22 @@ def main():
         print("[ERROR] IDE is running. Please close it first.")
         sys.exit(1)
 
-    # 1. Gather all files
     files = []
     
     # 1a. vscdb backups
     for f in glob.glob(str(GLOBALSTORE / 'state.vscdb*')):
         files.append(Path(f))
         
-    # 1b. pb files
-    for pb in PB_DIR.rglob("*.pb"):
-        if pb.name == "user_settings.pb": continue
+    # 1b. PB index backups (only specific summary files, not individual conversations!)
+    for pb in PB_DIR.rglob("agyhub_summaries_proto*.pb"):
         files.append(pb)
         
-    # Sort files by modified time (oldest first, so newer overwrites older)
     files.sort(key=lambda x: x.stat().st_mtime)
-    
     print(f"Found {len(files)} potential sources of history.")
     
     all_entries = {}
     source_stats = {}
     
-    # 2. Extract and merge entries
     for f in files:
         payload = None
         if f.suffix == ".pb":
@@ -144,32 +136,26 @@ def main():
         print("[ERROR] No history found to recover!")
         sys.exit(1)
         
-    # 3. Create merged payload
     merged_bytes = b"".join(all_entries.values())
     merged_b64 = base64.b64encode(merged_bytes).decode('ascii')
     
-    # 4. Backup current state
     if STATE_DB.exists():
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         backup_path = STATE_DB.parent / f"state.vscdb.pre_ultimate_recover_{timestamp}"
         shutil.copy2(STATE_DB, backup_path)
         print(f"[BACKUP] Current DB saved to {backup_path.name}")
         
-    # 5. Write to DB
     conn = sqlite3.connect(str(STATE_DB))
     cursor = conn.cursor()
-    
     cursor.execute('SELECT 1 FROM ItemTable WHERE key = ?', (KEY,))
     if cursor.fetchone():
         cursor.execute('UPDATE ItemTable SET value = ? WHERE key = ?', (merged_b64, KEY))
     else:
         cursor.execute('INSERT INTO ItemTable (key, value) VALUES (?, ?)', (KEY, merged_b64))
-        
     conn.commit()
     conn.close()
     
     print("\n[SUCCESS] Unified history successfully written to state.vscdb!")
-    print("You can now start Antigravity IDE and ALL history (up to 2 weeks + old) will appear.")
 
 if __name__ == "__main__":
     main()
