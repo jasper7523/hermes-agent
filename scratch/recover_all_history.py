@@ -5,7 +5,7 @@ import sys
 import glob
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # Config
@@ -14,6 +14,7 @@ GLOBALSTORE = APPDATA / 'Antigravity IDE' / 'User' / 'globalStorage'
 STATE_DB = GLOBALSTORE / 'state.vscdb'
 KEY = 'antigravityUnifiedStateSync.trajectorySummaries'
 PB_DIR = Path(os.environ['USERPROFILE']) / '.gemini' / 'antigravity-ide'
+BRAIN_DIR = PB_DIR / 'brain'
 
 def decode_varint(data, pos):
     result = 0
@@ -38,12 +39,11 @@ def parse_entries(decoded_bytes, source_name):
             wire_type = tag & 7
             
             if wire_type != 2:
-                # Top level fields must be length delimited. If not, this is likely corrupt data or we lost sync.
                 break
                 
             length, pos = decode_varint(decoded_bytes, pos)
             if pos + length > len(decoded_bytes):
-                break # corrupted chunk
+                break
                 
             entry_data = decoded_bytes[pos:pos+length]
             full_entry_bytes = decoded_bytes[start_pos:pos+length]
@@ -55,7 +55,7 @@ def parse_entries(decoded_bytes, source_name):
             if match:
                 uuid = match.group()
                 entries[uuid] = full_entry_bytes
-        except Exception as e:
+        except Exception:
             break
     return entries
 
@@ -71,7 +71,7 @@ def get_vscdb_payload(db_path):
                 return base64.b64decode(row[0])
             else:
                 return base64.b64decode(row[0].encode('ascii') + b'==')
-    except Exception as e:
+    except Exception:
         pass
     return None
 
@@ -85,9 +85,16 @@ def check_ide_running():
     count = int(result.stdout.strip()) if result.stdout.strip().isdigit() else 0
     return count > 0
 
+def create_template_entry(template_bytes, old_uuid, new_uuid):
+    b_old = old_uuid.encode('ascii')
+    b_new = new_uuid.encode('ascii')
+    if b_old not in template_bytes:
+        return None
+    return template_bytes.replace(b_old, b_new)
+
 def main():
     print("============================================================")
-    print("  ULTIMATE ANTIGRAVITY IDE HISTORY RECOVERY")
+    print("  ULTIMATE ANTIGRAVITY IDE HISTORY RECOVERY (WITH INJECTION)")
     print("============================================================")
     
     if check_ide_running():
@@ -96,46 +103,62 @@ def main():
 
     files = []
     
-    # 1a. vscdb backups
+    # Collect safe sources ONLY. We ignore the files corrupted by earlier failed runs.
     for f in glob.glob(str(GLOBALSTORE / 'state.vscdb*')):
+        name = os.path.basename(f)
+        if "pre_ultimate_recover" in name:
+            continue
         files.append(Path(f))
         
-    # 1b. PB index backups (only specific summary files, not individual conversations!)
     for pb in PB_DIR.rglob("agyhub_summaries_proto*.pb"):
         files.append(pb)
         
     files.sort(key=lambda x: x.stat().st_mtime)
-    print(f"Found {len(files)} potential sources of history.")
-    
     all_entries = {}
-    source_stats = {}
     
     for f in files:
-        payload = None
-        if f.suffix == ".pb":
-            payload = f.read_bytes()
-        else:
-            payload = get_vscdb_payload(f)
-            
+        payload = get_vscdb_payload(f) if f.suffix != ".pb" else f.read_bytes()
         if payload:
             entries = parse_entries(payload, f.name)
-            if entries:
-                added = 0
-                for u, b in entries.items():
-                    if u not in all_entries:
-                        added += 1
-                    all_entries[u] = b
-                source_stats[f.name] = (len(entries), added)
-                print(f"Read {f.name:45s}: {len(entries):4d} entries (+{added} new)")
-                
-    print("\n------------------------------------------------------------")
-    print(f"Total Unique Conversations Recovered: {len(all_entries)}")
-    print("------------------------------------------------------------\n")
+            for u, b in entries.items():
+                all_entries[u] = b
+
+    print(f"[INFO] Recovered {len(all_entries)} unique conversations from DB/PB backups.")
     
-    if not all_entries:
-        print("[ERROR] No history found to recover!")
-        sys.exit(1)
+    # 3. Scan the actual brain/ folder for missing 14-day history
+    cutoff_time = datetime.now() - timedelta(days=14)
+    missing_uuids = []
+    
+    for uuid_dir in BRAIN_DIR.iterdir():
+        if not uuid_dir.is_dir(): continue
+        uuid = uuid_dir.name
+        if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', uuid):
+            continue
+            
+        transcript = uuid_dir / '.system_generated' / 'logs' / 'transcript.jsonl'
+        if transcript.exists():
+            mod_time = datetime.fromtimestamp(transcript.stat().st_mtime)
+            if mod_time > cutoff_time:
+                if uuid not in all_entries:
+                    missing_uuids.append(uuid)
+                    
+    print(f"[INFO] Found {len(missing_uuids)} MISSING recent conversations on disk (last 14 days)!")
+    
+    # 4. Inject missing ones
+    if missing_uuids and all_entries:
+        # Avoid using a known bad template if possible
+        template_uuid = list(all_entries.keys())[-1]
+        template_bytes = all_entries[template_uuid]
         
+        injected_count = 0
+        for missing_uuid in missing_uuids:
+            new_entry = create_template_entry(template_bytes, template_uuid, missing_uuid)
+            if new_entry:
+                all_entries[missing_uuid] = new_entry
+                injected_count += 1
+                
+        print(f"[SUCCESS] Injected {injected_count} missing recent conversations!")
+    
     merged_bytes = b"".join(all_entries.values())
     merged_b64 = base64.b64encode(merged_bytes).decode('ascii')
     
@@ -143,7 +166,6 @@ def main():
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         backup_path = STATE_DB.parent / f"state.vscdb.pre_ultimate_recover_{timestamp}"
         shutil.copy2(STATE_DB, backup_path)
-        print(f"[BACKUP] Current DB saved to {backup_path.name}")
         
     conn = sqlite3.connect(str(STATE_DB))
     cursor = conn.cursor()
@@ -155,7 +177,7 @@ def main():
     conn.commit()
     conn.close()
     
-    print("\n[SUCCESS] Unified history successfully written to state.vscdb!")
+    print(f"\n[SUCCESS] Unified history ({len(all_entries)} total) written to state.vscdb!")
 
 if __name__ == "__main__":
     main()
