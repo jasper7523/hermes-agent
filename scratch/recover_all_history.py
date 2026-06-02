@@ -85,12 +85,59 @@ def check_ide_running():
     count = int(result.stdout.strip()) if result.stdout.strip().isdigit() else 0
     return count > 0
 
-def create_template_entry(template_bytes, old_uuid, new_uuid):
+def extract_title(entry):
+    pos = 0
+    while pos < len(entry):
+        tag, pos = decode_varint(entry, pos)
+        fn, wt = tag >> 3, tag & 7
+        if wt == 2:
+            l, pos = decode_varint(entry, pos)
+            if fn == 2: # Field 2 is State
+                sub = entry[pos-l:pos]
+                sp = 0
+                while sp < len(sub):
+                    stag, sp = decode_varint(sub, sp)
+                    sfn, swt = stag >> 3, stag & 7
+                    if swt == 2:
+                        sl, sp = decode_varint(sub, sp)
+                        if sfn == 1: # Nested Field 1 is Title
+                            return sub[sp-sl:sp]
+                        sp += sl
+                    elif swt == 0:
+                        _, sp = decode_varint(sub, sp)
+                    else:
+                        break
+                break
+        elif wt == 0:
+            _, pos = decode_varint(entry, pos)
+        else:
+            break
+    return b""
+
+def create_template_entry(template_bytes, old_uuid, new_uuid, new_title_str):
     b_old = old_uuid.encode('ascii')
     b_new = new_uuid.encode('ascii')
     if b_old not in template_bytes:
         return None
-    return template_bytes.replace(b_old, b_new)
+    
+    target_block = template_bytes.replace(b_old, b_new)
+    
+    # Pad or truncate new title to exact byte length of old title
+    old_title_bytes = extract_title(target_block)
+    if old_title_bytes:
+        target_len = len(old_title_bytes)
+        new_title_bytes = new_title_str.encode('utf-8', errors='ignore')
+        
+        # Adjust length with spaces to match exactly
+        if len(new_title_bytes) < target_len:
+            new_title_bytes += b' ' * (target_len - len(new_title_bytes))
+        elif len(new_title_bytes) > target_len:
+            # truncate (be careful with utf-8 boundaries, but simple ascii spaces is safe)
+            new_title_bytes = new_title_bytes[:target_len]
+            
+        target_block = target_block.replace(old_title_bytes, new_title_bytes, 1)
+        
+    return target_block
 
 def main():
     print("============================================================")
@@ -140,7 +187,30 @@ def main():
             mod_time = datetime.fromtimestamp(transcript.stat().st_mtime)
             if mod_time > cutoff_time:
                 if uuid not in all_entries:
-                    missing_uuids.append(uuid)
+                    # extract 10 char snippet smartly
+                    snippet = "Recovered "
+                    try:
+                        import json
+                        with open(transcript, 'r', encoding='utf-8') as f:
+                            for line in f:
+                                data = json.loads(line)
+                                if data.get('type') == 'USER_INPUT' and data.get('content'):
+                                    text = data['content']
+                                    # Strip XML tags injected by system
+                                    text = re.sub(r'<[^>]+>', '', text)
+                                    # Strip common boilerplate or model declarations
+                                    text = re.sub(r'(?i)(gemini|ollama|gemma|模型|宣告|使用|N[1-9])', '', text)
+                                    text = text.strip()
+                                    text = re.sub(r'[\r\n\t]+', ' ', text)
+                                    # Strip non-alphanumeric punctuation at start
+                                    text = re.sub(r'^[^a-zA-Z0-9\u4e00-\u9fa5]+', '', text)
+                                    if len(text) >= 2:
+                                        snippet = text[:10].ljust(10, ' ')
+                                        break
+                    except Exception:
+                        pass
+                    
+                    missing_uuids.append((uuid, snippet))
                     
     print(f"[INFO] Found {len(missing_uuids)} MISSING recent conversations on disk (last 14 days)!")
     
@@ -151,13 +221,13 @@ def main():
         template_bytes = all_entries[template_uuid]
         
         injected_count = 0
-        for missing_uuid in missing_uuids:
-            new_entry = create_template_entry(template_bytes, template_uuid, missing_uuid)
+        for missing_uuid, snippet in missing_uuids:
+            new_entry = create_template_entry(template_bytes, template_uuid, missing_uuid, snippet)
             if new_entry:
                 all_entries[missing_uuid] = new_entry
                 injected_count += 1
                 
-        print(f"[SUCCESS] Injected {injected_count} missing recent conversations!")
+        print(f"[SUCCESS] Injected {injected_count} missing recent conversations with custom titles!")
     
     merged_bytes = b"".join(all_entries.values())
     merged_b64 = base64.b64encode(merged_bytes).decode('ascii')
