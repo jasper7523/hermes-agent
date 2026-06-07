@@ -57,6 +57,7 @@ def main():
     parser.add_argument("--next-steps", default="", help="後續待辦事項")
     parser.add_argument("--tags", default="", help="標籤（逗號分隔）")
     parser.add_argument("--steps", type=int, default=0, help="本次 StepGate 循環數")
+    parser.add_argument("--used-policies", default="", help="本次使用的 Policy IDs (逗號分隔)")
     parser.add_argument("--root", default=None, help="Agent 工作區根目錄")
     args = parser.parse_args()
 
@@ -75,6 +76,21 @@ def main():
         stepgate_count=args.steps,
         session_ts=session_ts,
     )
+
+    if args.used_policies:
+        try:
+            import os
+            _hub_root = Path(os.environ.get("AGENT_HUB_ROOT", r"D:\Agent_Hub"))
+            shared_dir = _hub_root / "agents" / ".shared"
+            if str(shared_dir) not in sys.path:
+                sys.path.insert(0, str(shared_dir))
+            from learning.learning_engine import increment_policy_apply_count
+            
+            pids = [int(p.strip()) for p in args.used_policies.split(",") if p.strip().isdigit()]
+            for pid in pids:
+                increment_policy_apply_count(conn, pid)
+        except Exception as e:
+            print(f"[SESSION_SAVE] Error incrementing policy counts: {e}")
 
     # ─── N7-FIX-20260529: Post-Compaction Anchor ───
     # Writes a lightweight .checkpoint plaintext file that survives Context

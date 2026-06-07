@@ -81,6 +81,21 @@ def main():
         conn.close()
 
         if sessions:
+            # ─── N3 I-3 修正：載入 ACTIVE Policies ───
+            try:
+                import os
+                _hub_root = Path(os.environ.get("AGENT_HUB_ROOT", r"D:\Agent_Hub"))
+                shared_dir = _hub_root / "agents" / ".shared"
+                if str(shared_dir) not in sys.path:
+                    sys.path.insert(0, str(shared_dir))
+                from learning.policy_loader import load_active_policies
+                
+                policies_md = load_active_policies(db_path)
+                if policies_md:
+                    print(policies_md)
+            except Exception as e:
+                print(f"<!-- Failed to load policies: {e} -->\n")
+
             # 輸出結構化上下文
             print(f"=== {args.agent} Session Memory ===")
             print(f"歷史 session 總數: {stats.get('total', 0)}")
