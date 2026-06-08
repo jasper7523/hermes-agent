@@ -1,6 +1,6 @@
 AGENT_ID=N7
-SESSION_ID=195
-LAST_SUMMARY=MemOS v2 設計規劃審查完成。CONDITIONAL_APPROVAL 3.25/5。2 項 HIGH：H-1 LLM 模型選擇違反已核定 Gemini 統一方案（N3 用 Antigravity Claude，應改 gemini-3
-NEXT_STEPS=1. N3 修正 H-1 改 gemini-3.5-flash; 2. N3 修正 H-2 移除 sentence-transformers 和 FAISS; 3. N3 對齊 Phase 編號; 4. 修正後 N7 覆核
-TAGS=memos,v2-planning,evaluator,conditional-approval,gemini-flash,embedding,architecture-review
-SAVED_AT=2026-06-07T22:29:15.149939+08:00
+SESSION_ID=199
+LAST_SUMMARY=MemOS v2 條件修復覆核完成。APPROVED 4.25/5（由 CONDITIONAL 3.75 升級）。5項全過：H-4 Phase D auto_deprecate(IDLE_DAYS=30+apply<3)✅、M-4 測試19
+NEXT_STEPS=1. 監控 N9 排程實際執行 v2 流程; 2. v2.3 negative_feedback 可列入下一 Sprint; 3. MCP skill_search 應用端優化
+TAGS=memos,v2-completion,approved,final-signoff,all-milestones-complete,phase-d-fixed,195-tests-passed
+SAVED_AT=2026-06-08T20:31:57.291848+08:00

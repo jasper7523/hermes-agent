@@ -148,6 +148,53 @@ def main():
             print("--- 【PCA Checkpoint】讀取失敗，請手動 type checkpoint ---")
             print()
 
+
+    # --- Agent Tasks (Lv1 Postman) ---
+    try:
+        shared_learning_path = str(root.parent / ".shared" / "learning") if root.parent.name == "agents" else r"D:\Agent_Hubgents\.shared\learning"
+        if shared_learning_path not in sys.path:
+            sys.path.insert(0, shared_learning_path)
+        import agent_tasks
+        tasks = agent_tasks.claim_tasks(args.agent)
+        if tasks:
+            print("=== PENDING AGENT TASKS (Lv1 Postman) ===")
+            for t in tasks:
+                print(f"[{t['type'].upper()}] From: {t['source']} | Priority: {t['priority']}")
+                print(f"Payload: {t['payload']}")
+                print("---")
+            print("=================================================")
+            print()
+    except Exception as e:
+        print(f"[Warning] Failed to claim agent tasks: {e}")
+
+
+# --- L3 World Model Injection ---
+    try:
+        import sqlite3
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            # Load the latest World Model (if any)
+            wm_rows = conn.execute("SELECT * FROM world_models ORDER BY version DESC LIMIT 1").fetchall()
+            if wm_rows:
+                print("=== 🌐 MACRO COGNITION (L3 World Model) ===")
+                for wm in wm_rows:
+                    print(f"Domain: {wm['domain']} | Version: {wm['version']}")
+                    
+                    # L-3: Hard truncation to prevent LLM hallucinating beyond token budget
+                    # 1000 tokens is roughly 1500 CJK chars or 3000 English chars.
+                    content = wm['structure']
+                    if len(content) > 2000:
+                        content = content[:2000] + "
+...[TRUNCATED DUE TO L3 TOKEN BUDGET]..."
+                    
+                    print(content)
+                    print("---")
+                print("=================================================")
+                print()
+    except Exception as e:
+        # DB table might not exist yet or other errors
+        pass
+
     print("=== END SESSION MEMORY ===")
 
 
